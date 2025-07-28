@@ -1,2 +1,14 @@
 fileFormatVersion: 2
 guid: bf6fd8a7dd658524192eff9927d7596a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - host: {instanceID: 0}
+  - client: {instanceID: 0}
+  - ng: {fileID: 11400000, guid: b8767519a67b22b47a7991b7dbb3b2ee, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

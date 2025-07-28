@@ -175,7 +175,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  controller: {fileID: 8601571524273097881, guid: b6232335e6d14364a897927aa2d755f8, type: 3}
   plate: {fileID: 4011540696216096005, guid: 3d8259ca34f281c43822009d421ee773, type: 3}
   player:
     m_InternalValue:

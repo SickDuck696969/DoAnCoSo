@@ -1,22 +1,38 @@
+using System.Drawing;
 using Unity.Multiplayer.Playmode;
 using Unity.Netcode;
 using UnityEngine;
 
 public class MovePlate : NetworkBehaviour
 {
-    public NetworkObject controller;
+    GameObject controller;
     public NetworkVariable<NetworkObjectReference> reference = new NetworkVariable<NetworkObjectReference>();
     int matrixX;
     int matrixY;
-    public bool attack = false;
-
+    public NetworkVariable<bool> attack =
+        new NetworkVariable<bool>(false);
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        if (attack)
+        controller = GameObject.FindGameObjectWithTag("GameController");
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void AttackServerRpc()
+    {
+        NetworkObject refObj;
+        if (!reference.Value.TryGet(out refObj))
         {
-            gameObject.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0.0f, 0.0f, 1.0f);
+            Debug.LogError("Failed to resolve NetworkObjectReference in MovePlate.OnMouseUp!");
+            return;
         }
+        Chessman cmRef = refObj.GetComponent<Chessman>();
+        NetworkObject cp = controller.GetComponent<Game>().GetPos(matrixX, matrixY);
+        if (cp.name == "bl_king" || cp.name == "wh_king")
+        {
+            controller.GetComponent<Game>().Winner(cmRef.player.Value.ToString());
+        }
+        cp.GetComponent<NetworkObject>().Despawn();
     }
 
     public void OnMouseUp()
@@ -32,14 +48,9 @@ public class MovePlate : NetworkBehaviour
         int startX = cmRef.GetXBoard();
         int startY = cmRef.GetYBoard();
 
-        if (attack)
+        if (attack.Value)
         {
-            NetworkObject cp = controller.GetComponent<Game>().GetPos(matrixX, matrixY);
-            if (cp.name == "bl_king" || cp.name == "wh_king")
-            {
-                controller.GetComponent<Game>().Winner(cmRef.player.Value.ToString());
-            }
-            Destroy(cp);
+            AttackServerRpc();
         }
 
         // Castling logic BEFORE moving the king
@@ -49,7 +60,7 @@ public class MovePlate : NetworkBehaviour
             if (matrixX == 6)
             {
                 NetworkObject rook = controller.GetComponent<Game>().GetPos(7, matrixY);
-                controller.GetComponent<Game>().SetPosEmpty(7, matrixY);
+                controller.GetComponent<Game>().SetPosEmptyServerRpc(7, matrixY);
                 rook.GetComponent<Chessman>().SetXBoardServerRpc(5);
                 rook.GetComponent<Chessman>().SetCoords();
                 controller.GetComponent<Game>().SetPos(rook);
@@ -59,7 +70,7 @@ public class MovePlate : NetworkBehaviour
             else if (matrixX == 2)
             {
                 NetworkObject rook = controller.GetComponent<Game>().GetPos(0, matrixY);
-                controller.GetComponent<Game>().SetPosEmpty(0, matrixY);
+                controller.GetComponent<Game>().SetPosEmptyServerRpc(0, matrixY);
                 rook.GetComponent<Chessman>().SetXBoardServerRpc(3);
                 rook.GetComponent<Chessman>().SetCoords();
                 controller.GetComponent<Game>().SetPos(rook);
@@ -73,7 +84,7 @@ public class MovePlate : NetworkBehaviour
             Debug.LogError("MovePlate.controller is null!");
             return;
         }
-        controller.GetComponent<Game>().SetPosEmpty(startX, startY);
+        controller.GetComponent<Game>().SetPosEmptyServerRpc(startX, startY);
 
         //move piece
         MovePieceServerRpc();
@@ -83,6 +94,7 @@ public class MovePlate : NetworkBehaviour
         {
             AudioManager.Instance.PlayMoveSFX();
         }
+        Debug.Log(controller.GetComponent<Game>().currentColor.data.username + " moved " + cmRef.name + " to [" + matrixX + " " + matrixY + " ]");
     }
     [ServerRpc(RequireOwnership = false)]
     public void MovePieceServerRpc()
@@ -99,11 +111,23 @@ public class MovePlate : NetworkBehaviour
         cmRef.SetYBoardServerRpc(matrixY);
         cmRef.GetYBoard();
         cmRef.SetCoords();
+        controller.GetComponent<Game>().SetPos(refObj);
         cmRef.hasMoved = true;
         if (IsServer)
         {
             controller.GetComponent<Game>().currentPlayer.Value = (controller.GetComponent<Game>().currentPlayer.Value.ToString() == "White") ? "Black" : "White";
         }
+    }
+
+    [ClientRpc]
+    public void SetColorClientRpc(UnityEngine.Color newColor)
+    {
+        var renderer = GetComponent<SpriteRenderer>();
+        if (renderer != null)
+        {
+            renderer.color = newColor;
+        }
+        else Debug.Log("banh mi");
     }
 
     public void SetCoords(int x, int y)

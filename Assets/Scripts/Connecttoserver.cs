@@ -1,27 +1,160 @@
-using UnityEngine;
-using UnityEngine.UI;
+using NUnit.Framework;
+using Unity.Multiplayer.Playmode;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using Unity.Netcode;
+using UnityEngine;
+using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using TMPro;
 
 public class Connecttoserver : MonoBehaviour
 {
     [SerializeField] private Button host;
     [SerializeField] private Button client;
+    [SerializeField] private Button passnplay;
+    public GameObject tosser;
+    [SerializeField] private GameObject usernamein;
+    [SerializeField] private GameObject emailin;
+    [SerializeField] private GameObject passswordin;
+    [SerializeField] private Button Registerbt;
+    [SerializeField] private GameObject emaillogin;
+    [SerializeField] private GameObject passswordlogin;
+    [SerializeField] private Button loginbt;
+    public Player ng;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         host.onClick.AddListener(hostclick);
         client.onClick.AddListener(clientclick);
+        passnplay.onClick.AddListener(offclick);
+        Registerbt.onClick.AddListener(test);
+        loginbt.onClick.AddListener(login);
+    }
+
+    private void login()
+    {
+        StartCoroutine(ng.GetUserFromServer(emaillogin.GetComponent<TMPro.TMP_InputField>().text, passswordlogin.GetComponent<TMPro.TMP_InputField>().text));
+    }
+
+    private void test()
+    {
+        Register(usernamein.GetComponent<TMPro.TMP_InputField>().text, emailin.GetComponent<TMPro.TMP_InputField>().text, passswordin.GetComponent<TMPro.TMP_InputField>().text);
+    }
+
+    private void offclick()
+    {
+        Debug.Log("Pass n Play");
+        SceneManager.LoadScene("GameOffline");
     }
 
     private void hostclick()
     {
         Debug.Log("hosting");
         NetworkManager.Singleton.StartHost();
+        tosser.GetComponent<blackorwhite>().PlayerAdd("http://localhost/testdating/getuser.php?user_id=2");
     }
 
+    IEnumerator GetDateFromServer()
+    {
+        UnityWebRequest www = UnityWebRequest.Get("http://localhost/testdating/getthedate.php");
+        yield return www.SendWebRequest();
+
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError("Failed to contact server: " + www.error);
+        }
+        else
+        {
+            string json = www.downloadHandler.text;
+            Debug.Log("Server time is: " + json);
+        }
+    }
     private void clientclick()
     {
         Debug.Log("joining");
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.Singleton.StartClient();
     }
+
+    private void OnClientConnected(ulong clientId)
+    {
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            Debug.Log("Client connected to host.");
+            StartCoroutine(WaitForTosserSpawn());
+        }
+    }
+
+    private IEnumerator WaitForTosserSpawn()
+    {
+        float timeout = 5f;
+        float elapsed = 0f;
+
+        NetworkObject tosserNetworkObject = tosser.GetComponent<NetworkObject>();
+
+        while (!tosserNetworkObject.IsSpawned && elapsed < timeout)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (tosserNetworkObject.IsSpawned)
+        {
+            tosser.GetComponent<blackorwhite>().PlayerAdd("http://localhost/testdating/getuser.php?user_id=2");
+        }
+        else
+        {
+            Debug.Log("? Tosser not spawned within timeout.");
+        }
+    }
+
+    public void Register(string username, string email, string password)
+    {
+        StartCoroutine(PostRegister(username, email, password));
+    }
+
+    private IEnumerator PostRegister(string username, string email, string password)
+    {
+        UserRegisterData data = new UserRegisterData
+        {
+            username = username,
+            email = email,
+            password = password
+        };
+
+        string jsonData = JsonUtility.ToJson(data);
+        Debug.Log("Sending JSON: " + jsonData);
+
+        using (UnityWebRequest www = new UnityWebRequest("http://localhost/testdating/postuser.php", "POST"))
+        {
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            www.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            www.downloadHandler = new DownloadHandlerBuffer();
+            www.SetRequestHeader("Content-Type", "application/json");
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Success: " + www.downloadHandler.text);
+            }
+            else
+            {
+                Debug.LogError("Error: " + www.responseCode + " " + www.error);
+            }
+        }
+    }
+
+    [System.Serializable]
+    public class UserRegisterData
+    {
+        public string username;
+        public string email;
+        public string password;
+    }
+
 }

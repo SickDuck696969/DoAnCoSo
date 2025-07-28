@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.OSX;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -17,18 +18,20 @@ public class Game : NetworkBehaviour
     public NetworkVariable<FixedString64Bytes> currentPlayer =
     new NetworkVariable<FixedString64Bytes>("White", NetworkVariableReadPermission.Everyone,
     NetworkVariableWritePermission.Server);
+    public NetworkVariable<FixedString64Bytes> currentColorid = new NetworkVariable<FixedString64Bytes>();
+    public Player currentColor;
     private bool gameOver = false;
 
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-
+        Debug.Log(currentColor.data.username + " " + currentColor.pColor);
         if (IsClient)
         {
             currentPlayer.OnValueChanged += (oldValue, newValue) =>
             {
-                Debug.Log($"Current player changed from {oldValue} to {newValue}");
+                Debug.Log($"Current color changed from {oldValue} to {newValue}");
             };
         }
 
@@ -91,25 +94,9 @@ public class Game : NetworkBehaviour
             SetPos(playerBlack[i]);
             SetPos(playerWhite[i]);
         }
-
-        GetDateFromServer();
     }
 
-    IEnumerator GetDateFromServer()
-    {
-        UnityWebRequest www = UnityWebRequest.Get("http://localhost/testdating/getthedate.php");
-        yield return www.SendWebRequest();
-
-        if (www.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("Failed to contact server: " + www.error);
-        }
-        else
-        {
-            string json = www.downloadHandler.text;
-            Debug.Log("Server time is: " + json);
-        }
-    }
+    
 
     [ServerRpc]
     public void RequestSpawnPlayerServerRpc(ServerRpcParams rpcParams = default)
@@ -148,7 +135,8 @@ public class Game : NetworkBehaviour
         positions[cm.GetXBoard(), cm.GetYBoard()] = obj;
     }
 
-    public void SetPosEmpty(int x, int y)
+    [ServerRpc(RequireOwnership = false)]
+    public void SetPosEmptyServerRpc(int x, int y)
     {
         positions[x, y] = null;
     }
@@ -156,6 +144,12 @@ public class Game : NetworkBehaviour
     public NetworkObject GetPos(int x, int y)
     {
         return positions[x, y];
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void GetPosServerRpc(int x, int y)
+    {
+        Debug.Log("on square( " + x + ", " + y + ": " + positions[x, y]);
     }
 
     public bool PosOnBoard(int x, int y)

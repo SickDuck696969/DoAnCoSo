@@ -11,9 +11,10 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.WSA;
 
+
 public class Chessman : NetworkBehaviour
 {
-    public GameObject controller;
+    GameObject controller;
     public GameObject plate;
     public NetworkVariable<FixedString64Bytes> player =
     new NetworkVariable<FixedString64Bytes>();
@@ -41,6 +42,7 @@ public class Chessman : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        controller = GameObject.FindGameObjectWithTag("GameController");
         SetXBoardServerRpc(x.Value);
         SetYBoardServerRpc(y.Value);
         this.name = piecename.Value.ToString();
@@ -87,9 +89,9 @@ public class Chessman : NetworkBehaviour
 
     private void OnMouseUp()
     {
-        if (!controller.GetComponent<Game>().IsGameOver() && controller.GetComponent<Game>().currentPlayer.Value.ToString() == player.Value)
+        Debug.Log(controller.GetComponent<Game>().GetCurrentPlayer() + " " + this.name + " " + xBoard.Value + " " + yBoard.Value + " " + player.Value);
+        if (!controller.GetComponent<Game>().IsGameOver() && controller.GetComponent<Game>().currentPlayer.Value.ToString() == player.Value && controller.GetComponent<Game>().currentPlayer.Value == controller.GetComponent<Game>().currentColor.pColor)
         {
-            Debug.Log(controller.GetComponent<Game>().GetCurrentPlayer() + " " + this.name + " " + xBoard.Value + " " + yBoard.Value);
             DestroyMovePlatesServerRpc();
             InitiateMovePlates();
         }
@@ -111,47 +113,48 @@ public class Chessman : NetworkBehaviour
         {
             case "bl_queen":
             case "wh_queen":
-                LineMove(1, 0);
-                LineMove(0, 1);
-                LineMove(-1, 0);
-                LineMove(0, -1);
-                LineMove(1, 1);
-                LineMove(-1, 1);
-                LineMove(1, -1);
-                LineMove(-1, -1);
+                LineMoveServerRpc(1, 0);
+                LineMoveServerRpc(0, 1);
+                LineMoveServerRpc(-1, 0);
+                LineMoveServerRpc(0, -1);
+                LineMoveServerRpc(1, 1);
+                LineMoveServerRpc(-1, 1);
+                LineMoveServerRpc(1, -1);
+                LineMoveServerRpc(-1, -1);
                 break;
             case "bl_knight":
             case "wh_knight":
-                LMove();
+                LMoveServerRpc();
                 break;
             case "bl_bishop":
             case "wh_bishop":
-                LineMove(1, 1);
-                LineMove(-1, 1);
-                LineMove(1, -1);
-                LineMove(-1, -1);
+                LineMoveServerRpc(1, 1);
+                LineMoveServerRpc(-1, 1);
+                LineMoveServerRpc(1, -1);
+                LineMoveServerRpc(-1, -1);
                 break;
             case "bl_rook":
             case "wh_rook":
-                LineMove(1, 0);
-                LineMove(0, 1);
-                LineMove(-1, 0);
-                LineMove(0, -1);
+                LineMoveServerRpc(1, 0);
+                LineMoveServerRpc(0, 1);
+                LineMoveServerRpc(-1, 0);
+                LineMoveServerRpc(0, -1);
                 break;
             case "bl_king":
             case "wh_king":
-                SurroundMove();
+                SurroundMoveServerRpc();
                 break;
             case "bl_pawn":
-                PawnMove(xBoard.Value, yBoard.Value - 1);
+                PawnMoveServerRpc(xBoard.Value, yBoard.Value - 1);
                 break;
             case "wh_pawn":
-                PawnMove(xBoard.Value, yBoard.Value + 1);
+                PawnMoveServerRpc(xBoard.Value, yBoard.Value + 1);
                 break;
         }
     }
 
-    public void LineMove(int xIncrement, int yIncrement)
+    [ServerRpc(RequireOwnership = false)]
+    public void LineMoveServerRpc(int xIncrement, int yIncrement)
     {
         Game sc = controller.GetComponent<Game>();
         int x = xBoard.Value + xIncrement;
@@ -162,34 +165,36 @@ public class Chessman : NetworkBehaviour
             x += xIncrement;
             y += yIncrement;
         }
-        if (sc.PosOnBoard(x, y) && sc.GetPos(x, y).GetComponent<Chessman>().player != player)
+        if (sc.PosOnBoard(x, y) && sc.GetPos(x, y).GetComponent<Chessman>().player.Value != player.Value)
         {
             MovePlateAttackSpawnServerRpc(x, y);
         }
     }
 
-    public void LMove()
+    [ServerRpc(RequireOwnership = false)]
+    public void LMoveServerRpc()
     {
-        PointMovePlate(xBoard.Value + 1, yBoard.Value + 2);
-        PointMovePlate(xBoard.Value + 1, yBoard.Value - 2);
-        PointMovePlate(xBoard.Value - 1, yBoard.Value + 2);
-        PointMovePlate(xBoard.Value - 1, yBoard.Value - 2);
-        PointMovePlate(xBoard.Value + 2, yBoard.Value + 1);
-        PointMovePlate(xBoard.Value + 2, yBoard.Value - 1);
-        PointMovePlate(xBoard.Value - 2, yBoard.Value + 1);
-        PointMovePlate(xBoard.Value - 2, yBoard.Value - 1);
+        PointMovePlateServerRpc(xBoard.Value + 1, yBoard.Value + 2);
+        PointMovePlateServerRpc(xBoard.Value + 1, yBoard.Value - 2);
+        PointMovePlateServerRpc(xBoard.Value - 1, yBoard.Value + 2);
+        PointMovePlateServerRpc(xBoard.Value - 1, yBoard.Value - 2);
+        PointMovePlateServerRpc(xBoard.Value + 2, yBoard.Value + 1);
+        PointMovePlateServerRpc(xBoard.Value + 2, yBoard.Value - 1);
+        PointMovePlateServerRpc(xBoard.Value - 2, yBoard.Value + 1);
+        PointMovePlateServerRpc(xBoard.Value - 2, yBoard.Value - 1);
     }
 
-    public void SurroundMove()
+    [ServerRpc(RequireOwnership = false)]
+    public void SurroundMoveServerRpc()
     {
-        PointMovePlate(xBoard.Value + 1, yBoard.Value);
-        PointMovePlate(xBoard.Value - 1, yBoard.Value);
-        PointMovePlate(xBoard.Value, yBoard.Value + 1);
-        PointMovePlate(xBoard.Value, yBoard.Value - 1);
-        PointMovePlate(xBoard.Value + 1, yBoard.Value + 1);
-        PointMovePlate(xBoard.Value - 1, yBoard.Value + 1);
-        PointMovePlate(xBoard.Value + 1, yBoard.Value - 1);
-        PointMovePlate(xBoard.Value - 1, yBoard.Value - 1);
+        PointMovePlateServerRpc(xBoard.Value + 1, yBoard.Value);
+        PointMovePlateServerRpc(xBoard.Value - 1, yBoard.Value);
+        PointMovePlateServerRpc(xBoard.Value, yBoard.Value + 1);
+        PointMovePlateServerRpc(xBoard.Value, yBoard.Value - 1);
+        PointMovePlateServerRpc(xBoard.Value + 1, yBoard.Value + 1);
+        PointMovePlateServerRpc(xBoard.Value - 1, yBoard.Value + 1);
+        PointMovePlateServerRpc(xBoard.Value + 1, yBoard.Value - 1);
+        PointMovePlateServerRpc(xBoard.Value - 1, yBoard.Value - 1);
 
         // Castling attempt
         TryCastling();
@@ -234,8 +239,8 @@ public class Chessman : NetworkBehaviour
         return true;
     }
 
-
-    public void PointMovePlate(int x, int y)
+    [ServerRpc(RequireOwnership = false)]
+    public void PointMovePlateServerRpc(int x, int y)
     {
         Game sc = controller.GetComponent<Game>();
         if (sc.PosOnBoard(x, y))
@@ -245,14 +250,15 @@ public class Chessman : NetworkBehaviour
             {
                 MovePlateSpawnServerRpc(x, y);
             }
-            else if (cp.GetComponent<Chessman>().player != player)
+            else if (cp.GetComponent<Chessman>().player.Value != player.Value)
             {
                 MovePlateAttackSpawnServerRpc(x, y);
             }
         }
     }
 
-    public void PawnMove(int x, int y)
+    [ServerRpc(RequireOwnership = false)]
+    public void PawnMoveServerRpc(int x, int y)
     {
         Game sc = controller.GetComponent<Game>();
 
@@ -260,6 +266,7 @@ public class Chessman : NetworkBehaviour
         int startRow = (player.Value == "White") ? 1 : 6;
 
         // Single move forward
+        sc.GetPosServerRpc(xBoard.Value, yBoard.Value);
         if (sc.PosOnBoard(x, y) && sc.GetPos(x, y) == null)
         {
             if (IsClient)
@@ -278,20 +285,16 @@ public class Chessman : NetworkBehaviour
         }
 
         // Captures
-        Debug.Log(x + 1 + " " + y);
-        Debug.Log(sc.PosOnBoard(x + 1, y));
-        Debug.Log(x + " " + y);
-        Debug.Log(sc.GetPos(x+1, y));
         if (sc.PosOnBoard(x + 1, y) && sc.GetPos(x + 1, y) != null &&
-            sc.GetPos(x + 1, y).GetComponent<Chessman>().player != player)
-        {
+            sc.GetPos(x + 1, y).GetComponent<Chessman>().player.Value != player.Value)
+        {   
             if (IsClient)
             {
                 MovePlateAttackSpawnServerRpc(x + 1, y);
             }
         }
         if (sc.PosOnBoard(x - 1, y) && sc.GetPos(x - 1, y) != null &&
-            sc.GetPos(x - 1, y).GetComponent<Chessman>().player != player)
+            sc.GetPos(x - 1, y).GetComponent<Chessman>().player.Value != player.Value)
         {
             if (IsClient)
             {
@@ -300,6 +303,7 @@ public class Chessman : NetworkBehaviour
         }
     }
 
+    
     [ServerRpc(RequireOwnership = false)]
     public void MovePlateSpawnServerRpc(int matrixX, int matrixY)
     {
@@ -326,9 +330,10 @@ public class Chessman : NetworkBehaviour
         y += -3.5f;
         GameObject mp = Instantiate(plate, new Vector3(x, y, -2.0f), Quaternion.identity);
         MovePlate mpScript = mp.GetComponent<MovePlate>();
-        mpScript.attack = true;
+        mpScript.attack.Value = true;
         mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
         mpScript.SetCoords(matrixX, matrixY);
         mp.GetComponent<NetworkObject>().Spawn();
+        mpScript.SetColorClientRpc(new Color(1f, 0f, 0f, 1f));
     }
 }
