@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
@@ -9,6 +10,8 @@ public class Gameoff : MonoBehaviour
     private GameObject[,] positions = new GameObject[8, 8];
     private GameObject[] playerBlack = new GameObject[16];
     private GameObject[] playerWhite = new GameObject[16];
+    public GameObject ResultPanel;
+    public TextMeshProUGUI ResultText;
     private string currentPlayer = "White";
     private bool gameOver = false;
 
@@ -107,20 +110,12 @@ public class Gameoff : MonoBehaviour
         currentPlayer = (currentPlayer == "White") ? "Black" : "White";
     }
 
-    public void Update()
-    {
-        if (gameOver && Input.GetMouseButtonDown(0))
-        {
-            gameOver = false;
-            SceneManager.LoadScene("Game");
-        }
-    }
 
-    public void Winner(string playerWinner)
+
+    public void Winner(string currentPlayer)
     {
         gameOver = true;
-        GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().text = playerWinner + " wins!";
-        GameObject.FindGameObjectWithTag("WinnerText").GetComponent<Text>().enabled = true;
-        GameObject.FindGameObjectWithTag("RestartText").GetComponent<Text>().enabled = true;
+        ResultPanel.SetActive(true);
+        ResultText.text = currentPlayer + " wins!";
     }
 }

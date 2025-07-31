@@ -11,6 +11,8 @@ public class MainMenu : MonoBehaviour
     public GameObject FriendPanel;
     public GameObject ProfilePanel;
     public GameObject SettingPanel;
+    public GameObject PausePanel;
+    public GameObject ChatPanel;
     public Slider volumeSlider;
     public Slider sfxSlider;
 
@@ -83,5 +85,22 @@ public class MainMenu : MonoBehaviour
         LoginPanel.SetActive(false);
         ChooseModePanel.SetActive(false);
         RoomPanel.SetActive(false);
+        ChatPanel.SetActive(false);
+    }
+    public void Restart()
+    {
+        SceneManager.LoadSceneAsync("GameOffline");
+    }
+    public void PauseGame()
+    {
+        PausePanel.SetActive(true);
+    }
+    public void ResumeGame()
+    {
+        PausePanel.SetActive(false);
+    }
+    public void OpenChat()
+    {
+        ChatPanel.SetActive(true);
     }
 }
