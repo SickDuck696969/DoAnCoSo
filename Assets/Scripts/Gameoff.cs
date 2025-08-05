@@ -1,6 +1,7 @@
 using System.Net;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -11,7 +12,7 @@ public class Gameoff : MonoBehaviour
     public bool AI = false;
     public StockfishController stockfishController;
     public GameObject piece;
-    private GameObject[,] positions = new GameObject[8, 8];
+    public GameObject[,] positions = new GameObject[8, 8];
     private GameObject[] playerBlack = new GameObject[16];
     private GameObject[] playerWhite = new GameObject[16];
     public GameObject ResultPanel;
@@ -98,7 +99,9 @@ public class Gameoff : MonoBehaviour
     public void SetPos(GameObject obj)
     {
         Chessmanoff cm = obj.GetComponent<Chessmanoff>();
-        positions[cm.GetXBoard(), cm.GetYBoard()] = obj;
+        Debug.Log(cm.xBoard + " " + cm.yBoard);
+        positions[cm.xBoard, cm.yBoard] = obj;
+        Debug.Log(GetPos(cm.xBoard, cm.yBoard));
     }
 
     public void SetPosEmpty(int x, int y)
@@ -185,27 +188,39 @@ public class Gameoff : MonoBehaviour
 
         StartCoroutine(stockfishController.GetBestMove(fen, move =>
         {
+            Debug.Log(fen);
+            Debug.Log(move);
             string startpoint = move.Substring(0, 2);
             string endpoint = move.Substring(move.Length - 2);
-            Debug.Log(endpoint);
-            Chessmanoff en = GetPos(alphabet.IndexOf(endpoint.Substring(0, 1)), int.Parse(endpoint.Substring(endpoint.Length - 1))).GetComponent<Chessmanoff>();
-            Chessmanoff st = GetPos(alphabet.IndexOf(startpoint.Substring(0, 1)), int.Parse(startpoint.Substring(startpoint.Length - 1))).GetComponent<Chessmanoff>();
+            GameObject en = GetPos(alphabet.IndexOf(endpoint.Substring(0, 1)), int.Parse(endpoint.Substring(endpoint.Length - 1)) - 1);
+            GameObject st = GetPos(alphabet.IndexOf(startpoint.Substring(0, 1)), int.Parse(startpoint.Substring(startpoint.Length - 1)) - 1);
+            Chessmanoff cm = st.GetComponent<Chessmanoff>();
+            Debug.Log(en);
+            Debug.Log(st);
             if (en != null)
             {
                 if (en.name == "bl_king" || en.name == "wh_king")
                 {
-                    Winner(st.player);
+                    Winner(cm.player);
                 }
-                Destroy(GetPos(alphabet.IndexOf(endpoint.Substring(0, 1)), int.Parse(endpoint.Substring(endpoint.Length - 1))));
-                st.SetXBoard(en.xBoard);
-                st.SetYBoard(en.yBoard);
-                SetPosEmpty(en.xBoard, en.yBoard);
-                st.SetCoords();
-                SetPos(GetPos(alphabet.IndexOf(startpoint.Substring(0, 1)), int.Parse(startpoint.Substring(startpoint.Length - 1))));
-                st.hasMoved = true;
-
-                NextTurn();
+                Destroy(en);
             }
+            SetPosEmpty(cm.xBoard, cm.yBoard);
+            cm.xBoard = alphabet.IndexOf(endpoint.Substring(0, 1));
+            cm.yBoard = int.Parse(endpoint.Substring(endpoint.Length - 1)) - 1;
+            Debug.Log(cm.xBoard + " " + cm.yBoard);
+            float x = cm.xBoard;
+            float y = cm.yBoard;
+            x *= 1.0f;
+            y *= 1.0f;
+            x += -3.5f;
+            y += -3.5f;
+            cm.transform.position = new Vector3(x, y, -1.0f);
+            SetPos(st);
+            cm.hasMoved = true;
+
+            Debug.Log(GetPos(alphabet.IndexOf(endpoint.Substring(0, 1)), int.Parse(endpoint.Substring(endpoint.Length - 1)) - 1));
+            NextTurn();
         }));
     }
 
@@ -214,7 +229,10 @@ public class Gameoff : MonoBehaviour
         currentPlayer = (currentPlayer == "White") ? "Black" : "White";
         if (AI)
         {
-            generatefen();
+            if(currentPlayer != yourcolor)
+            {
+                generatefen();
+            }
         }else
         {
             generatefen();

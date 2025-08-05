@@ -356,6 +356,14 @@ public class Chessman : NetworkBehaviour
         mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
         mpScript.SetCoords(matrixX, matrixY);
         mp.GetComponent<NetworkObject>().Spawn();
+        if (player.Value == "Black")
+        {
+            mpScript.SetColorClientRpc(new Color(255f, 0f, 88f, 1f));
+        }
+        else if (player.Value == "White")
+        {
+            mpScript.SetColorClientRpc(new Color(0f, 176f, 255f, 1f));
+        }
     }
     [ServerRpc(RequireOwnership = false)]
     public void MovePlateAttackSpawnServerRpc(int matrixX, int matrixY)
@@ -400,6 +408,9 @@ public class Chessman : NetworkBehaviour
                         GameObject skillbutt = Instantiate(button, this.transform);
                         skillbutt.name = ability.name;
                         skillbutt.GetComponentInChildren<TMP_Text>().text = ability.name;
+                        Vector3 pos = skillbutt.transform.position;
+                        pos.z = -5;
+                        skillbutt.transform.position = pos;
                         skillbutt.GetComponent<Button>().onClick.AddListener(() => resolve(ability.name));
                     }
                 }
@@ -410,6 +421,9 @@ public class Chessman : NetworkBehaviour
                         Debug.Log(ability);
                         GameObject skillbutt = Instantiate(button, this.transform);
                         skillbutt.name = ability.name;
+                        Vector3 pos = skillbutt.transform.position;
+                        pos.z = -5;
+                        skillbutt.transform.position = pos;
                         skillbutt.GetComponentInChildren<TMP_Text>().text = ability.name;
                         skillbutt.GetComponent<Button>().onClick.AddListener(() => resolve(ability.name));
                     }

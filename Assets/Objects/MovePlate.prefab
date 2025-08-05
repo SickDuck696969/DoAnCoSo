@@ -80,7 +80,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: -5682780217911200517, guid: 4e0c517d95566ea4c94ae2ebc9cee312, type: 3}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.3962264, g: 0.3962264, b: 0.3962264, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -128,8 +128,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  controller: {fileID: 5176795543279152505, guid: b6232335e6d14364a897927aa2d755f8, type: 3}
-  attack: 0
+  attack:
+    m_InternalValue: 0
 --- !u!61 &6249317214212030708
 BoxCollider2D:
   m_ObjectHideFlags: 0
