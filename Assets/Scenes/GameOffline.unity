@@ -499,9 +499,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebc01c153a08d404c8d47f88cd02d5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AI: 0
+  stockfishController: {fileID: 0}
   piece: {fileID: 6656621585568395184, guid: 7dd22eaf19a8c30429f038147f9fbd2d, type: 3}
   ResultPanel: {fileID: 858406619}
   ResultText: {fileID: 1086898711}
+  yourcolor: 
 --- !u!1 &1664201746
 GameObject:
   m_ObjectHideFlags: 0

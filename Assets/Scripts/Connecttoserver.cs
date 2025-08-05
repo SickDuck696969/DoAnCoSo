@@ -15,6 +15,7 @@ public class Connecttoserver : MonoBehaviour
     [SerializeField] private Button host;
     [SerializeField] private Button client;
     [SerializeField] private Button passnplay;
+    [SerializeField] private Button AIplay;
     public GameObject tosser;
     [SerializeField] private GameObject usernamein;
     [SerializeField] private GameObject emailin;
@@ -33,6 +34,13 @@ public class Connecttoserver : MonoBehaviour
         passnplay.onClick.AddListener(offclick);
         Registerbt.onClick.AddListener(test);
         loginbt.onClick.AddListener(login);
+        AIplay.onClick.AddListener(playAI);
+    }
+
+    private void playAI()
+    {
+        Debug.Log("play AI");
+        SceneManager.LoadScene("GameAI");
     }
 
     private void login()
@@ -55,7 +63,8 @@ public class Connecttoserver : MonoBehaviour
     {
         Debug.Log("hosting");
         NetworkManager.Singleton.StartHost();
-        tosser.GetComponent<blackorwhite>().PlayerAdd("http://localhost/testdating/getuser.php?user_id=2");
+        ng.pColor = "Black";
+        NetworkManager.Singleton.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
     IEnumerator GetDateFromServer()
@@ -85,7 +94,7 @@ public class Connecttoserver : MonoBehaviour
         if (clientId == NetworkManager.Singleton.LocalClientId)
         {
             Debug.Log("Client connected to host.");
-            StartCoroutine(WaitForTosserSpawn());
+            ng.pColor = "White";
         }
     }
 

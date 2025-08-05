@@ -1,11 +1,15 @@
+using System.Net;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using static System.Net.Mime.MediaTypeNames;
 
 public class Gameoff : MonoBehaviour
 {
+    public bool AI = false;
+    public StockfishController stockfishController;
     public GameObject piece;
     private GameObject[,] positions = new GameObject[8, 8];
     private GameObject[] playerBlack = new GameObject[16];
@@ -13,10 +17,27 @@ public class Gameoff : MonoBehaviour
     public GameObject ResultPanel;
     public TextMeshProUGUI ResultText;
     private string currentPlayer = "White";
+    public string yourcolor;
     private bool gameOver = false;
+    public string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    public string alphabet = "abcdefgh";
 
     void Start()
     {
+        if (AI) {
+            yourcolor = "White";
+            if(yourcolor == "White")
+            {
+                fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+            } else
+            {
+                fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1";
+            }
+            if(currentPlayer != yourcolor)
+            {
+                generatefen();
+            }
+        }
         playerWhite = new GameObject[] {
             Create("wh_rook", 0, 0),
             Create("wh_knight", 1, 0),
@@ -105,9 +126,99 @@ public class Gameoff : MonoBehaviour
         return gameOver;
     }
 
+    public void generatefen()
+    {
+        fen = "";
+        int height = positions.GetLength(1);
+        int width = positions.GetLength(0);
+
+        for (int y = height - 1; y >= 0; y--)
+        {
+            int emptyCount = 0;
+
+            for (int x = 0; x < width; x++)
+            {
+                GameObject piece = GetPos(x, y);
+                string squareString = "";
+
+                if (piece != null)
+                {
+                    if (piece.name.EndsWith("pawn")) squareString = "p";
+                    else if (piece.name.EndsWith("rook")) squareString = "r";
+                    else if (piece.name.EndsWith("knight")) squareString = "n";
+                    else if (piece.name.EndsWith("bishop")) squareString = "b";
+                    else if (piece.name.EndsWith("queen")) squareString = "q";
+                    else if (piece.name.EndsWith("king")) squareString = "k";
+
+                    if (piece.name.StartsWith("wh")) squareString = squareString.ToUpper();
+
+                    if (emptyCount > 0)
+                    {
+                        fen += emptyCount.ToString();
+                        emptyCount = 0;
+                    }
+
+                    fen += squareString;
+                }
+                else
+                {
+                    emptyCount++;
+                }
+            }
+
+            if (emptyCount > 0)
+            {
+                fen += emptyCount.ToString();
+            }
+
+            if (y != 0)
+            {
+                fen += "/";
+            }
+        }
+
+        if (currentPlayer == "White") fen += " w";
+        else {fen += " b"; }
+
+
+        fen += " KQkq - 0 1";
+
+        StartCoroutine(stockfishController.GetBestMove(fen, move =>
+        {
+            string startpoint = move.Substring(0, 2);
+            string endpoint = move.Substring(move.Length - 2);
+            Debug.Log(endpoint);
+            Chessmanoff en = GetPos(alphabet.IndexOf(endpoint.Substring(0, 1)), int.Parse(endpoint.Substring(endpoint.Length - 1))).GetComponent<Chessmanoff>();
+            Chessmanoff st = GetPos(alphabet.IndexOf(startpoint.Substring(0, 1)), int.Parse(startpoint.Substring(startpoint.Length - 1))).GetComponent<Chessmanoff>();
+            if (en != null)
+            {
+                if (en.name == "bl_king" || en.name == "wh_king")
+                {
+                    Winner(st.player);
+                }
+                Destroy(GetPos(alphabet.IndexOf(endpoint.Substring(0, 1)), int.Parse(endpoint.Substring(endpoint.Length - 1))));
+                st.SetXBoard(en.xBoard);
+                st.SetYBoard(en.yBoard);
+                SetPosEmpty(en.xBoard, en.yBoard);
+                st.SetCoords();
+                SetPos(GetPos(alphabet.IndexOf(startpoint.Substring(0, 1)), int.Parse(startpoint.Substring(startpoint.Length - 1))));
+                st.hasMoved = true;
+
+                NextTurn();
+            }
+        }));
+    }
+
     public void NextTurn()
     {
         currentPlayer = (currentPlayer == "White") ? "Black" : "White";
+        if (AI)
+        {
+            generatefen();
+        }else
+        {
+            generatefen();
+        }
     }
 
 

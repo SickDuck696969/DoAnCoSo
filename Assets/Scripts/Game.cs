@@ -1,16 +1,20 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.OSX;
 using UnityEngine.Networking;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+
 public class Game : NetworkBehaviour
 {
+    public Army draft;
     public GameObject piece;
     public NetworkObject[,] positions = new NetworkObject[8, 8];
     private NetworkObject[] playerBlack = new NetworkObject[16];
@@ -21,7 +25,8 @@ public class Game : NetworkBehaviour
     public NetworkVariable<FixedString64Bytes> currentColorid = new NetworkVariable<FixedString64Bytes>();
     public Player currentColor;
     private bool gameOver = false;
-
+    public int white_AP = 5500;
+    public int black_AP = 5500;
 
     public override void OnNetworkSpawn()
     {
@@ -82,7 +87,7 @@ public class Game : NetworkBehaviour
             Create("bl_pawn", 0, 6),
             Create("bl_pawn", 1, 6),
             Create("bl_pawn", 2, 6),
-            Create("bl_pawn", 3, 6),
+            Create("bl_pawn", 3, 2),
             Create("bl_pawn", 4, 6),
             Create("bl_pawn", 5, 6),
             Create("bl_pawn", 6, 6),
@@ -105,10 +110,10 @@ public class Game : NetworkBehaviour
         obj.GetComponent<NetworkObject>().SpawnWithOwnership(rpcParams.Receive.SenderClientId);
     }
 
+
     public NetworkObject Create(string name, int x, int y)
     {
         if (!IsServer) return null;
-
 
         GameObject obj = Instantiate(piece, new Vector3(0, 0, -1), Quaternion.identity);
         Chessman cm = obj.GetComponent<Chessman>();
@@ -125,7 +130,7 @@ public class Game : NetworkBehaviour
                 cm.player.Value = "White";
                 break;
         }
-        cm.hasMoved = false;
+        cm.hasMoved.Value = false;
         return obj.GetComponent<NetworkObject>();
     }
 
@@ -177,7 +182,13 @@ public class Game : NetworkBehaviour
         }
     }
 
-
+    [ServerRpc(RequireOwnership =false)]
+    public void APloseServerRpc(string color, int amount)
+    {
+        if (color == "White") white_AP -= amount;
+        else if (color == "Black") black_AP -= amount;
+    }
+    
     public void Winner(string playerWinner)
     {
         gameOver = true;

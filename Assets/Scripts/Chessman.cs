@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
+using TMPro;
 using Unity.Collections;
 using Unity.Multiplayer.Playmode;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEditor.PackageManager;
+using UnityEditor.Playables;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Networking;
@@ -14,7 +17,8 @@ using UnityEngine.WSA;
 
 public class Chessman : NetworkBehaviour
 {
-    GameObject controller;
+    public GameObject button;
+    public GameObject controller;
     public GameObject plate;
     public NetworkVariable<FixedString64Bytes> player =
     new NetworkVariable<FixedString64Bytes>();
@@ -24,9 +28,15 @@ public class Chessman : NetworkBehaviour
         new NetworkVariable<int>();
     public NetworkVariable<int> y =
         new NetworkVariable<int>();
-    private NetworkVariable<int> xBoard = new NetworkVariable<int>(-1);
-    private NetworkVariable<int> yBoard = new NetworkVariable<int>(-1);
-    public bool hasMoved = false;
+    public NetworkVariable<int> xBoard = new NetworkVariable<int>(-1);
+    public NetworkVariable<int> yBoard = new NetworkVariable<int>(-1);
+    public NetworkVariable<bool> hasMoved =
+        new NetworkVariable<bool>();
+    public NetworkVariable<bool> hasSpelled =
+        new NetworkVariable<bool>(false);
+    public Piece variant;
+    public NetworkVariable<int> xmodifier = new NetworkVariable<int>();
+    public NetworkVariable<int> ymodifier = new NetworkVariable<int>();
     public Sprite bl_queen,
         bl_rook,
         bl_bishop,
@@ -57,7 +67,9 @@ public class Chessman : NetworkBehaviour
             case "bl_queen": this.GetComponent<SpriteRenderer>().sprite = bl_queen; break;
             case "bl_rook": this.GetComponent<SpriteRenderer>().sprite = bl_rook; break;
             case "bl_bishop": this.GetComponent<SpriteRenderer>().sprite = bl_bishop; break;
-            case "bl_knight": this.GetComponent<SpriteRenderer>().sprite = bl_knight; break;
+            case "bl_knight": 
+                this.GetComponent<SpriteRenderer>().sprite = bl_knight; 
+                break;
             case "bl_pawn": this.GetComponent<SpriteRenderer>().sprite = bl_pawn; break;
             case "bl_king": this.GetComponent<SpriteRenderer>().sprite = bl_king; break;
             case "wh_queen": this.GetComponent<SpriteRenderer>().sprite = wh_queen; break;
@@ -69,6 +81,14 @@ public class Chessman : NetworkBehaviour
         }
 
         SetCoords();
+        foreach (Piece variantee in controller.GetComponent<Game>().draft.army)
+        {
+            if (this.name.EndsWith(variantee.suit))
+            {
+                variant = variantee.Clone();
+                variant.owner = this.GetComponent<Chessman>();
+            }
+        }
     }
     public void SetCoords()
     {
@@ -89,11 +109,18 @@ public class Chessman : NetworkBehaviour
 
     private void OnMouseUp()
     {
+        Debug.Log(variant);
+        Debug.Log(button);
         Debug.Log(controller.GetComponent<Game>().GetCurrentPlayer() + " " + this.name + " " + xBoard.Value + " " + yBoard.Value + " " + player.Value);
         if (!controller.GetComponent<Game>().IsGameOver() && controller.GetComponent<Game>().currentPlayer.Value.ToString() == player.Value && controller.GetComponent<Game>().currentPlayer.Value == controller.GetComponent<Game>().currentColor.pColor)
         {
             DestroyMovePlatesServerRpc();
-            InitiateMovePlates();
+            killbutt();
+            if (variant != null)
+            {
+                SetButton();
+            }
+            else { InitiateMovePlates(); }
         }
     }
 
@@ -104,6 +131,17 @@ public class Chessman : NetworkBehaviour
         foreach (GameObject plate in plates)
         {
             plate.GetComponent<NetworkObject>().Despawn();
+        }
+    }
+
+    public void killbutt()
+    {
+        Debug.Log("kill");
+        GameObject[] butts = GameObject.FindGameObjectsWithTag("skillbutt");
+        Debug.Log(butts);
+        foreach (GameObject butt in butts)
+        {
+            Destroy(butt);
         }
     }
 
@@ -202,7 +240,7 @@ public class Chessman : NetworkBehaviour
     public void TryCastling()
     {
         Game sc = controller.GetComponent<Game>();
-        if (hasMoved || this.name != "wh_king" && this.name != "bl_king")
+        if (hasMoved.Value || this.name != "wh_king" && this.name != "bl_king")
             return;
 
         int row = (player.Value == "White") ? 0 : 7;
@@ -227,7 +265,7 @@ public class Chessman : NetworkBehaviour
         if (rook == null) return false;
 
         Chessman cm = rook.GetComponent<Chessman>();
-        if (cm == null || cm.name != (player.Value == "White" ? "wh_rook" : "bl_rook") || cm.hasMoved)
+        if (cm == null || cm.name != (player.Value == "White" ? "wh_rook" : "bl_rook") || cm.hasMoved.Value)
             return false;
 
         foreach (int col in emptyCols)
@@ -335,5 +373,91 @@ public class Chessman : NetworkBehaviour
         mpScript.SetCoords(matrixX, matrixY);
         mp.GetComponent<NetworkObject>().Spawn();
         mpScript.SetColorClientRpc(new Color(1f, 0f, 0f, 1f));
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void ActionsServerRpc()
+    {
+        if(variant != null)
+        {
+            variant.Passive();
+        }
+    }
+    public void runcheck()
+    {
+        Debug.Log("running check" + hasMoved.Value);
+    }
+    public void SetButton()
+    {
+        if (variant != null)
+        {
+            foreach (Ability ability in variant.kit)
+            {
+                if (!hasMoved.Value)
+                {
+                    if (ability.type == "premove")
+                    {
+                        Debug.Log(ability);
+                        GameObject skillbutt = Instantiate(button, this.transform);
+                        skillbutt.name = ability.name;
+                        skillbutt.GetComponentInChildren<TMP_Text>().text = ability.name;
+                        skillbutt.GetComponent<Button>().onClick.AddListener(() => resolve(ability.name));
+                    }
+                }
+                else if (hasMoved.Value)
+                {
+                    if (ability.type == "postmove")
+                    {
+                        Debug.Log(ability);
+                        GameObject skillbutt = Instantiate(button, this.transform);
+                        skillbutt.name = ability.name;
+                        skillbutt.GetComponentInChildren<TMP_Text>().text = ability.name;
+                        skillbutt.GetComponent<Button>().onClick.AddListener(() => resolve(ability.name));
+                    }
+                }
+            }
+        }
+    }
+
+    public void resolve(string name)
+    {
+        Game sc = controller.GetComponent<Game>();
+        foreach (Ability ability in variant.kit)
+        {
+            if(ability.name == name)
+            {
+                Debug.Log(ability);
+                killbutt();
+                SkillServerRpc(name, ability.type);
+            }
+        }
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void SkillServerRpc(string name, string type)
+    {
+        switch (type)
+        {
+            case "premove":
+                variant.PreMove(name);
+                break;
+            case "postmove":
+                variant.PostMove(name);
+                break;
+        }
+        
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void changeturnServerRpc()
+    {
+        controller.GetComponent<Game>().currentPlayer.Value = (controller.GetComponent<Game>().currentPlayer.Value.ToString() == "White") ? "Black" : "White";
+        hasMoved.Value = false;
+        hasSpelled.Value = false;
+    }
+    void Update()
+    {
+        ActionsServerRpc();
+        if (hasMoved.Value && hasSpelled.Value)
+        {
+            changeturnServerRpc();
+        }
     }
 }

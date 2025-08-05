@@ -5,8 +5,8 @@ public class Chessmanoff : MonoBehaviour
 {
     public GameObject controller;
     public GameObject plate;
-    private int xBoard = -1;
-    private int yBoard = -1;
+    public int xBoard = -1;
+    public int yBoard = -1;
     public string player;
     public bool hasMoved = false;
     public Sprite bl_queen,
@@ -58,10 +58,21 @@ public class Chessmanoff : MonoBehaviour
 
     private void OnMouseUp()
     {
-        if (!controller.GetComponent<Gameoff>().IsGameOver() && controller.GetComponent<Gameoff>().GetCurrentPlayer() == player)
+        if (controller.GetComponent<Gameoff>().AI)
         {
-            DestroyMovePlates();
-            InitiateMovePlates();
+            if (!controller.GetComponent<Gameoff>().IsGameOver() && controller.GetComponent<Gameoff>().GetCurrentPlayer() == player && player == controller.GetComponent<Gameoff>().yourcolor)
+            {
+                DestroyMovePlates();
+                InitiateMovePlates();
+            }
+        }
+        else
+        {
+            if (!controller.GetComponent<Gameoff>().IsGameOver() && controller.GetComponent<Gameoff>().GetCurrentPlayer() == player)
+            {
+                DestroyMovePlates();
+                InitiateMovePlates();
+            }
         }
     }
 

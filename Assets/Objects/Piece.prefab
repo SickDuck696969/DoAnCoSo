@@ -31,8 +31,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -3.5, y: -3.5, z: -1}
-  m_LocalScale: {x: 0.25, y: 0.25, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.12, y: 0.12, z: 0.48}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -80,12 +80,12 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -6259317301956971483, guid: eab0d39acf43e0344a814114211e77f4, type: 3}
+  m_Sprite: {fileID: 21300000, guid: eab0d39acf43e0344a814114211e77f4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.2, y: 0.2}
+  m_Size: {x: 6.2, y: 6.95}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -129,13 +129,13 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 3.2, y: 2.96}
-    newSize: {x: 0.2, y: 0.2}
+    oldSize: {x: 6.2, y: 6.95}
+    newSize: {x: 6.2, y: 6.95}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 2.25, y: 2.9}
+  m_Size: {x: 6.17, y: 6.98}
   m_EdgeRadius: 0
 --- !u!114 &3200075171269003776
 MonoBehaviour:
@@ -175,6 +175,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  button: {fileID: 5502383566392016706, guid: 76af3d0e849be8942891360240a77766, type: 3}
+  controller: {fileID: 0}
   plate: {fileID: 4011540696216096005, guid: 3d8259ca34f281c43822009d421ee773, type: 3}
   player:
     m_InternalValue:
@@ -318,17 +320,28 @@ MonoBehaviour:
     m_InternalValue: 0
   y:
     m_InternalValue: 0
-  hasMoved: 0
+  xBoard:
+    m_InternalValue: -1
+  yBoard:
+    m_InternalValue: -1
+  hasMoved:
+    m_InternalValue: 0
+  hasSpelled:
+    m_InternalValue: 0
+  xmodifier:
+    m_InternalValue: 0
+  ymodifier:
+    m_InternalValue: 0
   bl_queen: {fileID: 6941264430462745087, guid: 9ac1fcf25346c3846a5069988469f0e1, type: 3}
   bl_rook: {fileID: 4029591404209254226, guid: baf4b243bf48d7441a8f119b8c118f91, type: 3}
   bl_bishop: {fileID: -1839820986891341407, guid: d61fa88379de05a4cbccc74f3f49ee01, type: 3}
-  bl_knight: {fileID: -6259317301956971483, guid: eab0d39acf43e0344a814114211e77f4, type: 3}
+  bl_knight: {fileID: 21300000, guid: eab0d39acf43e0344a814114211e77f4, type: 3}
   bl_pawn: {fileID: 8181868554413489711, guid: 6b482719d433a3e4096b759cfd3a4f7a, type: 3}
   bl_king: {fileID: 2654564227598221988, guid: a069f2a71dd49fe42a90934ef39f0484, type: 3}
   wh_queen: {fileID: 7575503115358480749, guid: 1520a3a09c1b8ca4abf5fa474ab144bf, type: 3}
   wh_rook: {fileID: -5200753759591078380, guid: b10b8bee7eab31348b98ddf4529b9f35, type: 3}
   wh_bishop: {fileID: -1302254948583161774, guid: 1d362047924ec484783dbc99cfc935b0, type: 3}
-  wh_knight: {fileID: -602613282843705964, guid: 9a3ebc5245a6be54dbe52d9b10050daf, type: 3}
+  wh_knight: {fileID: 21300000, guid: 9a3ebc5245a6be54dbe52d9b10050daf, type: 3}
   wh_pawn: {fileID: 2061959593568422348, guid: 93fef1041a698694888a9b8165a6f219, type: 3}
   wh_king: {fileID: -5380975645198896921, guid: 181ef8c419a687144a7feb74d13bb7ec, type: 3}
 --- !u!114 &7524623780692409159

@@ -168,6 +168,7 @@ MonoBehaviour:
   host: {fileID: 1926871274}
   client: {fileID: 1571534635}
   passnplay: {fileID: 8318467660678886544}
+  AIplay: {fileID: 433766403}
   tosser: {fileID: 652313694}
   usernamein: {fileID: 2062537933}
   emailin: {fileID: 249874160}
@@ -1277,6 +1278,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 417097435}
   m_CullTransparentMesh: 1
+--- !u!114 &433766403 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 234549325846054173, guid: d64e41959fc83ce43a6e7dc253956597, type: 3}
+  m_PrefabInstance: {fileID: 8318467660678886543}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &436586142 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4742975949610377963, guid: 3628be7330fb95d49a24c8fbb5f74025, type: 3}

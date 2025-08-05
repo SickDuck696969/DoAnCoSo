@@ -1,7 +1,23 @@
+using System;
+using System.Collections;
 using System.Drawing;
+using System.Xml.Serialization;
+using TMPro;
+using Unity.Collections;
+using Unity.Multiplayer.Playmode;
 using Unity.Multiplayer.Playmode;
 using Unity.Netcode;
+using Unity.Netcode;
+using Unity.VisualScripting;
+using UnityEditor.PackageManager;
 using UnityEngine;
+using UnityEngine;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine.WSA;
+using static UnityEditor.UIElements.ToolbarMenu;
 
 public class MovePlate : NetworkBehaviour
 {
@@ -20,6 +36,7 @@ public class MovePlate : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void AttackServerRpc()
     {
+        Game sc = controller.GetComponent<Game>();
         NetworkObject refObj;
         if (!reference.Value.TryGet(out refObj))
         {
@@ -64,7 +81,7 @@ public class MovePlate : NetworkBehaviour
                 rook.GetComponent<Chessman>().SetXBoardServerRpc(5);
                 rook.GetComponent<Chessman>().SetCoords();
                 controller.GetComponent<Game>().SetPos(rook);
-                rook.GetComponent<Chessman>().hasMoved = true;
+                rook.GetComponent<Chessman>().hasMoved.Value = true;
             }
             // Queen-side
             else if (matrixX == 2)
@@ -74,21 +91,27 @@ public class MovePlate : NetworkBehaviour
                 rook.GetComponent<Chessman>().SetXBoardServerRpc(3);
                 rook.GetComponent<Chessman>().SetCoords();
                 controller.GetComponent<Game>().SetPos(rook);
-                rook.GetComponent<Chessman>().hasMoved = true;
+                rook.GetComponent<Chessman>().hasMoved.Value = true;
             }
         }
 
-        // Clear old position
+        //move piece
+        MovePieceServerRpc(startX, startY);
+        controller.GetComponent<Game>().positions[cmRef.GetXBoard(), cmRef.GetYBoard()] = refObj;
         if (controller == null)
         {
             Debug.LogError("MovePlate.controller is null!");
             return;
         }
-        controller.GetComponent<Game>().SetPosEmptyServerRpc(startX, startY);
-
-        //move piece
-        MovePieceServerRpc();
-        controller.GetComponent<Game>().positions[cmRef.GetXBoard(), cmRef.GetYBoard()] = refObj;
+        if (cmRef.variant != null)
+        {
+            if (!cmRef.hasSpelled.Value)
+            {
+                Debug.Log("aint spelled yet");
+                cmRef.SetButton();
+            }
+        }
+        else cmRef.changeturnServerRpc();
         cmRef.DestroyMovePlatesServerRpc();
         if (AudioManager.Instance != null)
         {
@@ -97,7 +120,12 @@ public class MovePlate : NetworkBehaviour
         Debug.Log(controller.GetComponent<Game>().currentColor.data.username + " moved " + cmRef.name + " to [" + matrixX + " " + matrixY + " ]");
     }
     [ServerRpc(RequireOwnership = false)]
-    public void MovePieceServerRpc()
+    public void clearingServerRpc(int startX, int startY)
+    {
+        controller.GetComponent<Game>().SetPosEmptyServerRpc(startX, startY);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void MovePieceServerRpc(int startX, int startY)
     {
         NetworkObject refObj;
         if (!reference.Value.TryGet(out refObj))
@@ -105,18 +133,16 @@ public class MovePlate : NetworkBehaviour
             Debug.LogError("Failed to resolve NetworkObjectReference in MovePlate.OnMouseUp!");
             return;
         }
-
         Chessman cmRef = refObj.GetComponent<Chessman>();
         cmRef.SetXBoardServerRpc(matrixX);
         cmRef.SetYBoardServerRpc(matrixY);
         cmRef.GetYBoard();
         cmRef.SetCoords();
         controller.GetComponent<Game>().SetPos(refObj);
-        cmRef.hasMoved = true;
-        if (IsServer)
-        {
-            controller.GetComponent<Game>().currentPlayer.Value = (controller.GetComponent<Game>().currentPlayer.Value.ToString() == "White") ? "Black" : "White";
-        }
+        cmRef.hasMoved.Value = true;
+        cmRef.xmodifier.Value = ((matrixX - startX) > 0) ? 1 : -1;
+        cmRef.ymodifier.Value = ((matrixY - startY) > 0) ? 1 : -1;
+        controller.GetComponent<Game>().SetPosEmptyServerRpc(startX, startY);
     }
 
     [ClientRpc]
@@ -127,7 +153,6 @@ public class MovePlate : NetworkBehaviour
         {
             renderer.color = newColor;
         }
-        else Debug.Log("banh mi");
     }
 
     public void SetCoords(int x, int y)
@@ -145,4 +170,6 @@ public class MovePlate : NetworkBehaviour
     {
         return reference.Value;
     }
+
+    
 }

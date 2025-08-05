@@ -8,6 +8,7 @@ TagManager:
   - WinnerText
   - RestartText
   - Panel
+  - skillbutt
   layers:
   - Default
   - TransparentFX
