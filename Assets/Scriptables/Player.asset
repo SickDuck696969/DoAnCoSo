@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Player
   m_EditorClassIdentifier: 
   data:
-    user_id: 
+    user_id: 3
     username: 
     email: 
     passsword: 
@@ -22,3 +22,4 @@ MonoBehaviour:
     createwhen: 
     History: 
   pColor: Black
+  butt: {fileID: 0}

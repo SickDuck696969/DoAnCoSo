@@ -83,12 +83,22 @@ public class Chessman : NetworkBehaviour
         SetCoords();
         foreach (Piece variantee in controller.GetComponent<Game>().draft.army)
         {
+            Debug.Log("Checking variant suit: " + variantee.suit);
+            Debug.Log("piecename: " + this.name);
+
             if (this.name.EndsWith(variantee.suit))
             {
+                Debug.Log("Match found for suit: " + variantee.suit + ". Cloning variant...");
                 variant = variantee.Clone();
                 variant.owner = this.GetComponent<Chessman>();
+                Debug.Log("Variant cloned and owner assigned.");
+            }
+            else
+            {
+                Debug.Log("No match for: " + variantee.suit);
             }
         }
+
     }
     public void SetCoords()
     {
@@ -199,13 +209,13 @@ public class Chessman : NetworkBehaviour
         int y = yBoard.Value + yIncrement;
         while (sc.PosOnBoard(x, y) && sc.GetPos(x, y) == null)
         {
-            MovePlateSpawnServerRpc(x, y);
+            MovePlateSpawnServerRpc(x, y, 0);
             x += xIncrement;
             y += yIncrement;
         }
         if (sc.PosOnBoard(x, y) && sc.GetPos(x, y).GetComponent<Chessman>().player.Value != player.Value)
         {
-            MovePlateAttackSpawnServerRpc(x, y);
+            MovePlateAttackSpawnServerRpc(x, y, 0);
         }
     }
 
@@ -248,13 +258,13 @@ public class Chessman : NetworkBehaviour
         // King-side (short) castling
         if (CanCastle(row, 7, 5, 6))
         {
-            MovePlateSpawnServerRpc(6, row); // King moves here
+            MovePlateSpawnServerRpc(6, row, 0); // King moves here
         }
 
         // Queen-side (long) castling
         if (CanCastle(row, 0, 1, 2, 3))
         {
-            MovePlateSpawnServerRpc(2, row); // King moves here
+            MovePlateSpawnServerRpc(2, row, 0); // King moves here
         }
     }
 
@@ -286,11 +296,11 @@ public class Chessman : NetworkBehaviour
             NetworkObject cp = sc.GetPos(x, y);
             if (cp == null)
             {
-                MovePlateSpawnServerRpc(x, y);
+                MovePlateSpawnServerRpc(x, y, 0);
             }
             else if (cp.GetComponent<Chessman>().player.Value != player.Value)
             {
-                MovePlateAttackSpawnServerRpc(x, y);
+                MovePlateAttackSpawnServerRpc(x, y, 0);
             }
         }
     }
@@ -309,7 +319,7 @@ public class Chessman : NetworkBehaviour
         {
             if (IsClient)
             {
-                MovePlateSpawnServerRpc(x, y);
+                MovePlateSpawnServerRpc(x, y, 0);
             }
 
             // Double move forward on first move only
@@ -317,7 +327,7 @@ public class Chessman : NetworkBehaviour
             {
                 if (IsClient)
                 {
-                    MovePlateSpawnServerRpc(x, y + direction);
+                    MovePlateSpawnServerRpc(x, y + direction, 0);
                 }
             }
         }
@@ -328,7 +338,7 @@ public class Chessman : NetworkBehaviour
         {   
             if (IsClient)
             {
-                MovePlateAttackSpawnServerRpc(x + 1, y);
+                MovePlateAttackSpawnServerRpc(x + 1, y, 0);
             }
         }
         if (sc.PosOnBoard(x - 1, y) && sc.GetPos(x - 1, y) != null &&
@@ -336,14 +346,14 @@ public class Chessman : NetworkBehaviour
         {
             if (IsClient)
             {
-                MovePlateAttackSpawnServerRpc(x - 1, y);
+                MovePlateAttackSpawnServerRpc(x - 1, y, 0);
             }
         }
     }
 
     
     [ServerRpc(RequireOwnership = false)]
-    public void MovePlateSpawnServerRpc(int matrixX, int matrixY)
+    public void MovePlateSpawnServerRpc(int matrixX, int matrixY, int type)
     {
         float x = matrixX;
         float y = matrixY;
@@ -353,6 +363,7 @@ public class Chessman : NetworkBehaviour
         y += -3.5f;
         GameObject mp = Instantiate(plate, new Vector3(x, y, -2.0f), Quaternion.identity);
         MovePlate mpScript = mp.GetComponent<MovePlate>();
+        if (type != 0) mpScript.esploding.Value = true;
         mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
         mpScript.SetCoords(matrixX, matrixY);
         mp.GetComponent<NetworkObject>().Spawn();
@@ -366,7 +377,7 @@ public class Chessman : NetworkBehaviour
         }
     }
     [ServerRpc(RequireOwnership = false)]
-    public void MovePlateAttackSpawnServerRpc(int matrixX, int matrixY)
+    public void MovePlateAttackSpawnServerRpc(int matrixX, int matrixY, int type)
     {
         float x = matrixX;
         float y = matrixY;
@@ -377,10 +388,56 @@ public class Chessman : NetworkBehaviour
         GameObject mp = Instantiate(plate, new Vector3(x, y, -2.0f), Quaternion.identity);
         MovePlate mpScript = mp.GetComponent<MovePlate>();
         mpScript.attack.Value = true;
+        if (type != 0) mpScript.esploding.Value = true;
         mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
         mpScript.SetCoords(matrixX, matrixY);
         mp.GetComponent<NetworkObject>().Spawn();
         mpScript.SetColorClientRpc(new Color(1f, 0f, 0f, 1f));
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void EffectSpawnServerRpc(int type, int matrixX, int matrixY)
+    {
+        butactuallyServerRpc(type, matrixX, matrixY);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void butactuallyServerRpc(int type, int matrixX, int matrixY)
+    {
+        float x = matrixX;
+        float y = matrixY;
+        GameObject mp;
+        MovePlate mpScript;
+        switch (type)
+        {
+            case 0:
+                for (int i = 1; i < 4; i++)
+                {
+                    Game sc = controller.GetComponent<Game>();
+                    if (sc.GetPos(matrixX, matrixY + i) != null && sc.GetPos(matrixX, matrixY + i).GetComponent<Chessman>().player.Value != player.Value)
+                    {
+
+                    }
+                    else if (sc.GetPos(matrixX, matrixY + i) == null)
+                    {
+                        MovePlateSpawnServerRpc(matrixX, matrixY + i, 1);
+                    }
+                }
+                break;
+            case 1:
+                x = matrixX;
+                y = matrixY;
+                x *= 1.0f;
+                y *= 1.0f;
+                x += -3.5f;
+                y += -3.5f;
+                mp = Instantiate(plate, new Vector3(x, y, -2.0f), Quaternion.identity);
+                mp.AddComponent<explosionplate>();
+                mpScript = mp.GetComponent<explosionplate>();
+                mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
+                mpScript.SetCoords(matrixX, matrixY);
+                mpScript.controller = controller;
+                mpScript.SetColorClientRpc(new Color(1f, 0f, 0f, 1f));
+                break;
+        }
     }
     [ServerRpc(RequireOwnership = false)]
     public void ActionsServerRpc()
@@ -405,7 +462,8 @@ public class Chessman : NetworkBehaviour
                     if (ability.type == "premove")
                     {
                         Debug.Log(ability);
-                        GameObject skillbutt = Instantiate(button, this.transform);
+                        Transform grandchild = transform.Find("Canvas/Image");
+                        GameObject skillbutt = Instantiate(button, grandchild);
                         skillbutt.name = ability.name;
                         skillbutt.GetComponentInChildren<TMP_Text>().text = ability.name;
                         Vector3 pos = skillbutt.transform.position;
@@ -419,7 +477,8 @@ public class Chessman : NetworkBehaviour
                     if (ability.type == "postmove")
                     {
                         Debug.Log(ability);
-                        GameObject skillbutt = Instantiate(button, this.transform);
+                        Transform grandchild = transform.Find("Canvas/Image");
+                        GameObject skillbutt = Instantiate(button, grandchild);
                         skillbutt.name = ability.name;
                         Vector3 pos = skillbutt.transform.position;
                         pos.z = -5;

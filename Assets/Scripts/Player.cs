@@ -1,11 +1,13 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 [CreateAssetMenu(fileName = "Player", menuName = "Scriptable Objects/Player")]
 public class Player : ScriptableObject
 {
     public PlayerData data;
     public string pColor = "Black";
+    public Button butt;
 
     public IEnumerator GetUserFromServer(string email, string password)
     {

@@ -63,7 +63,7 @@ public class Connecttoserver : MonoBehaviour
     {
         Debug.Log("hosting");
         NetworkManager.Singleton.StartHost();
-        ng.pColor = "Black";
+        ng.pColor = "White";
         NetworkManager.Singleton.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
@@ -94,7 +94,7 @@ public class Connecttoserver : MonoBehaviour
         if (clientId == NetworkManager.Singleton.LocalClientId)
         {
             Debug.Log("Client connected to host.");
-            ng.pColor = "White";
+            ng.pColor = "Black";
         }
     }
 

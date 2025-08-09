@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Unity.Netcode;
 using Unity.VisualScripting;
@@ -98,32 +99,52 @@ public class Skid : PostMove
     }
     public override void action()
     {
+        Debug.Log("usinganacctikon");
         Game sc = owner.controller.GetComponent<Game>();
         int x = owner.xBoard.Value * owner.xmodifier.Value;
         int y = owner.yBoard.Value * owner.ymodifier.Value;
         Debug.Log(x + " " + y);
         Debug.Log(x+1);
         Debug.Log((x-1) + " " + (y-2));
-        Debug.Log(sc.GetPos(x - 1, y - 2));
-        if (sc.GetPos(x-1, y-2) == null)
+        try
         {
-            Chessman victim = new Chessman();
-            if (sc.GetPos(x + 1, y) != null)
+            if (x - 1 < sc.positions.Length && y - 2 < sc.positions.Length && sc.GetPos(x - 1, y - 2).name.EndsWith(owner.variant.suit))
             {
-                victim = sc.GetPos(x + 1, y).GetComponent<Chessman>();
-            }
-            else
-            {
-                owner.hasMoved.Value = true;
-                end();
-            }
-            if (victim != null && victim.player != owner.player)
-            {
-                owner.MovePlateAttackSpawnServerRpc(victim.xBoard.Value, victim.yBoard.Value);
-                owner.hasMoved.Value = false;
-                end();
+                Chessman victim = new Chessman();
+                if (sc.GetPos(x + 1, y) != null)
+                {
+                    victim = sc.GetPos(x + 1, y).GetComponent<Chessman>();
+                }
+                else
+                {
+                    owner.hasMoved.Value = true;
+                    end();
+                }
+                if (victim != null && victim.player != owner.player)
+                {
+                    owner.MovePlateAttackSpawnServerRpc(victim.xBoard.Value, victim.yBoard.Value, 0);
+                    owner.hasMoved.Value = false;
+                    end();
+                }
             }
         }
+        catch (IndexOutOfRangeException ex)
+        {
+            owner.SetButton();
+        }
+
+    }
+}
+public class Pass : PostMove
+{
+    public Pass()
+    {
+        name = "Pass";
+        AP = 0;
+    }
+    public override void action()
+    {
+        end();
     }
 }
 public class KnightKick : PreMove
@@ -139,19 +160,7 @@ public class KnightKick : PreMove
         int x = owner.xBoard.Value;
         int y = owner.yBoard.Value;
         owner.hasMoved.Value = true;
-        for (int i = 1; i < 4; i++)
-        {
-            Debug.Log(i);
-            Debug.Log(sc.GetPos(x, y + i));
-            if (sc.GetPos(x, y + i) != null && sc.GetPos(x, y + i).GetComponent<Chessman>().player.Value != owner.player.Value)
-            {
-                owner.MovePlateAttackSpawnServerRpc(x, y + i);
-            }
-            else if(sc.GetPos(x,y + i) == null)
-            {
-                owner.MovePlateSpawnServerRpc(x, y + i);
-            }
-        }
+        owner.EffectSpawnServerRpc(0, x, y);
         end();
     }
 }
@@ -173,6 +182,7 @@ public class Move : PreMove
     public override void action()
     {
         owner.hasMoved.Value = true;
+        Debug.Log(owner.variant);
         owner.InitiateMovePlates();
     }
 }

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4158449804954881538}
   - component: {fileID: 6465586727290408200}
   - component: {fileID: -3900430726431947812}
-  - component: {fileID: 7836343415193171169}
+  - component: {fileID: -8501512233398987493}
   - component: {fileID: 6249317214212030708}
   m_Layer: 0
   m_Name: MovePlate
@@ -115,7 +115,7 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!114 &7836343415193171169
+--- !u!114 &-8501512233398987493
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -128,7 +128,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  controller: {fileID: 0}
+  matrixX: 0
+  matrixY: 0
   attack:
+    m_InternalValue: 0
+  esploding:
     m_InternalValue: 0
 --- !u!61 &6249317214212030708
 BoxCollider2D:

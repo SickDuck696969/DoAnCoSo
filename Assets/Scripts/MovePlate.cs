@@ -21,11 +21,13 @@ using static UnityEditor.UIElements.ToolbarMenu;
 
 public class MovePlate : NetworkBehaviour
 {
-    GameObject controller;
+    public GameObject controller;
     public NetworkVariable<NetworkObjectReference> reference = new NetworkVariable<NetworkObjectReference>();
-    int matrixX;
-    int matrixY;
+    public int matrixX;
+    public int matrixY;
     public NetworkVariable<bool> attack =
+        new NetworkVariable<bool>(false);
+    public NetworkVariable<bool> esploding =
         new NetworkVariable<bool>(false);
     public override void OnNetworkSpawn()
     {
@@ -52,7 +54,7 @@ public class MovePlate : NetworkBehaviour
         cp.GetComponent<NetworkObject>().Despawn();
     }
 
-    public void OnMouseUp()
+    public virtual void OnMouseUp()
     {
         NetworkObject refObj;
         if (!reference.Value.TryGet(out refObj))
@@ -142,7 +144,19 @@ public class MovePlate : NetworkBehaviour
         cmRef.hasMoved.Value = true;
         cmRef.xmodifier.Value = ((matrixX - startX) > 0) ? 1 : -1;
         cmRef.ymodifier.Value = ((matrixY - startY) > 0) ? 1 : -1;
-        controller.GetComponent<Game>().SetPosEmptyServerRpc(startX, startY);
+        if (esploding.Value)
+        {
+            for (int i = matrixX - 1; i <= matrixX + 1; i++)
+            {
+                for (int y = matrixY - 1; y <= matrixY + 1; y++)
+                {
+                    if (!(i == matrixX && y == matrixY))
+                    {
+                        cmRef.EffectSpawnServerRpc(1, i, y);
+                    }
+                }
+            }
+        }
     }
 
     [ClientRpc]
@@ -171,5 +185,8 @@ public class MovePlate : NetworkBehaviour
         return reference.Value;
     }
 
-    
+    public virtual void Update()
+    {
+
+    }
 }
