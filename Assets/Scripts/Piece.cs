@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class Piece
 {
+    public string name;
     public string suit;
     public int PV;
     public string move;
@@ -29,10 +30,70 @@ public class Piece
     }
 }
 
+public class Pawn : Piece
+{
+    public Pawn()
+    {
+        name = "Pawn";
+        suit = "pawn";
+        PV = 100;
+        move = "ForwardOneStep";
+    }
+
+    public override void Passive()
+    {
+        Ability loaded = new Passive();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "passive")
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override void PreMove(string name)
+    {
+        Ability loaded = new PostMove();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "premove" && ability.name == name)
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override void PostMove(string name)
+    {
+        Ability loaded = new PostMove();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "postmove" && ability.name == name)
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override Piece Clone()
+    {
+        Debug.Log("Cloning: Pawn");
+        return new Pawn();
+    }
+}
+
 public class Knight : Piece
 {
     public Knight()
     {
+        name = "Knight";
         suit = "knight";
         PV = 300;
         move = "L-Move";
@@ -87,68 +148,11 @@ public class Knight : Piece
     }
 }
 
-public class Rook : Piece
-{
-    public Rook()
-    {
-        suit = "rook";
-        PV = 500;
-        move = "LineMove";
-    }
-
-    public override void Passive()
-    {
-        Ability loaded = new Passive();
-        foreach (Ability ability in kit)
-        {
-            if (ability.type == "passive")
-            {
-                loaded = ability;
-                loaded.owner = owner;
-            }
-        }
-        loaded.action();
-    }
-
-    public override void PreMove(string name)
-    {
-        Ability loaded = new PostMove();
-        foreach (Ability ability in kit)
-        {
-            if (ability.type == "premove" && ability.name == name)
-            {
-                loaded = ability;
-                loaded.owner = owner;
-            }
-        }
-        loaded.action();
-    }
-
-    public override void PostMove(string name)
-    {
-        Ability loaded = new PostMove();
-        foreach (Ability ability in kit)
-        {
-            if (ability.type == "postmove" && ability.name == name)
-            {
-                loaded = ability;
-                loaded.owner = owner;
-            }
-        }
-        loaded.action();
-    }
-
-    public override Piece Clone()
-    {
-        Debug.Log("Cloning: Rook");
-        return new Rook();
-    }
-}
-
 public class Bishop : Piece
 {
     public Bishop()
     {
+        name = "Bishop";
         suit = "bishop";
         PV = 330;
         move = "DiagonalMove";
@@ -203,10 +207,70 @@ public class Bishop : Piece
     }
 }
 
+public class Rook : Piece
+{
+    public Rook()
+    {
+        name = "Rook";
+        suit = "rook";
+        PV = 500;
+        move = "LineMove";
+    }
+
+    public override void Passive()
+    {
+        Ability loaded = new Passive();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "passive")
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override void PreMove(string name)
+    {
+        Ability loaded = new PostMove();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "premove" && ability.name == name)
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override void PostMove(string name)
+    {
+        Ability loaded = new PostMove();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "postmove" && ability.name == name)
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override Piece Clone()
+    {
+        Debug.Log("Cloning: Rook");
+        return new Rook();
+    }
+}
+
 public class Queen : Piece
 {
     public Queen()
     {
+        name = "Queen";
         suit = "queen";
         PV = 900;
         move = "AnyDirectionMove";
@@ -265,6 +329,7 @@ public class King : Piece
 {
     public King()
     {
+        name = "King";
         suit = "king";
         PV = 10000;
         move = "OneStepAnyDirection";
@@ -319,13 +384,14 @@ public class King : Piece
     }
 }
 
-public class Pawn : Piece
+public class MaskedKnight : Knight
 {
-    public Pawn()
+    public MaskedKnight()
     {
-        suit = "pawn";
-        PV = 100;
-        move = "ForwardOneStep";
+        name = "MaskedKnight";
+        kit.Add(new TyphoonEngine());
+        kit.Add(new KnightKick());
+        kit.Add(new Skid());
     }
 
     public override void Passive()
@@ -344,7 +410,93 @@ public class Pawn : Piece
 
     public override void PreMove(string name)
     {
+        Ability loaded = new PreMove();
+        Debug.Log(loaded);
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "premove" && ability.name == name)
+            {
+                loaded = ability;
+                Debug.Log(loaded);
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override void PostMove(string name)
+    {
         Ability loaded = new PostMove();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "postmove" && ability.name == name)
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override void Counter(string name)
+    {
+        Ability loaded = new Ability();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "counter" && ability.name == name)
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override void OnCapture(string name)
+    {
+        Ability loaded = new Ability();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "oncapture" && ability.name == name)
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override Piece Clone()
+    {
+        Debug.Log("Cloning: MaskedKnight");
+        return new MaskedKnight();
+    }
+}
+
+public class VenomRook : Rook
+{
+    public VenomRook()
+    {
+        name = "VenomRook";
+    }
+
+    public override void Passive()
+    {
+        Ability loaded = new Passive();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "passive")
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override void PreMove(string name)
+    {
+        Ability loaded = new PreMove();
         foreach (Ability ability in kit)
         {
             if (ability.type == "premove" && ability.name == name)
@@ -370,9 +522,37 @@ public class Pawn : Piece
         loaded.action();
     }
 
+    public override void Counter(string name)
+    {
+        Ability loaded = new Ability();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "counter" && ability.name == name)
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
+    public override void OnCapture(string name)
+    {
+        Ability loaded = new Ability();
+        foreach (Ability ability in kit)
+        {
+            if (ability.type == "oncapture" && ability.name == name)
+            {
+                loaded = ability;
+                loaded.owner = owner;
+            }
+        }
+        loaded.action();
+    }
+
     public override Piece Clone()
     {
-        Debug.Log("Cloning: Pawn");
-        return new Pawn();
+        Debug.Log("Cloning: VenomRook");
+        return new VenomRook();
     }
 }

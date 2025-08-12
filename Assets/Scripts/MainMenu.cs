@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -15,9 +16,14 @@ public class MainMenu : MonoBehaviour
     public GameObject ChatPanel;
     public Slider volumeSlider;
     public Slider sfxSlider;
+    public Player player;
+    public TMP_Text namebox;
+    public TMP_Text ipbox;
 
     void Start()
     {
+        ipbox = GameObject.Find("Canvas/ipbox").GetComponent<TMP_Text>();
+        namebox = GameObject.FindGameObjectWithTag("WhiteAP").GetComponent<TMP_Text>();
         if (AudioManager.Instance != null)
         {
             volumeSlider.value = AudioManager.Instance.GetBGMVolume();
@@ -25,6 +31,14 @@ public class MainMenu : MonoBehaviour
 
             sfxSlider.value = AudioManager.Instance.GetSFXVolume();
             sfxSlider.onValueChanged.AddListener(AudioManager.Instance.SetSFXVolume);
+        }
+    }
+    void Update()
+    {
+        ipbox.text = player.ip;
+        if(player.data.username != null)
+        {
+            namebox.text = player.data.username;
         }
     }
     public void Play()

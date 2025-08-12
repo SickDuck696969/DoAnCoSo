@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
+
 public class Connecttoserver : MonoBehaviour
 {
     [SerializeField] private Button host;
@@ -24,27 +25,136 @@ public class Connecttoserver : MonoBehaviour
     [SerializeField] private GameObject emaillogin;
     [SerializeField] private GameObject passswordlogin;
     [SerializeField] private Button loginbt;
+
+    [SerializeField] private Button Playhost;
+    [SerializeField] private Button Playclient;
+    [SerializeField] private Button togame;
     public Player ng;
+    public bool hostready = false;
+    public bool clientready = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        host.onClick.AddListener(hostclick);
-        client.onClick.AddListener(clientclick);
-        passnplay.onClick.AddListener(offclick);
-        Registerbt.onClick.AddListener(test);
-        loginbt.onClick.AddListener(login);
-        AIplay.onClick.AddListener(playAI);
+        if (host != null)
+        {
+            host.onClick.AddListener(hostclick);
+        }
+
+        if (client != null)
+        {
+            client.onClick.AddListener(clientclick);
+        }
+
+        if (passnplay != null)
+        {
+            passnplay.onClick.AddListener(offclick);
+        }
+
+        if (Registerbt != null)
+        {
+            Registerbt.onClick.AddListener(test);
+        }
+
+        if (loginbt != null)
+        {
+            loginbt.onClick.AddListener(login);
+        }
+
+        if (AIplay != null)
+        {
+            AIplay.onClick.AddListener(playAI);
+        }
+
+        if (Playhost != null)
+        {
+            Playhost.onClick.AddListener(hostapplycolor);
+            Playclient.onClick.AddListener(clientapplycolor);
+        }
+        if (togame != null)
+        {
+            togame.onClick.AddListener(togamea);
+        }
+
     }
 
+    private void hostapplycolor()
+    {
+        tosser.GetComponent<blackorwhite>().ng.pColor = null;
+        tosser.GetComponent<blackorwhite>().ng.status = "host";
+        tosser.GetComponent<blackorwhite>().PlayerAdd();
+        if(tosser.GetComponent<blackorwhite>().ng.pColor != null)
+        {
+            if (tosser.GetComponent<blackorwhite>().ng.pColor == "Black")
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(
+                    "VarianSelection",
+                    UnityEngine.SceneManagement.LoadSceneMode.Single
+                );
+            }
+            else
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(
+                    "VarianSelectionbl",
+                    UnityEngine.SceneManagement.LoadSceneMode.Single
+                );
+            }
+        }
+    }
+    private void clientapplycolor()
+    {
+        tosser.GetComponent<blackorwhite>().ng.pColor = null;
+        tosser.GetComponent<blackorwhite>().ng.status = "client";
+        tosser.GetComponent<blackorwhite>().PlayerAdd();
+        if (tosser.GetComponent<blackorwhite>().ng.pColor != null)
+        {
+            if (tosser.GetComponent<blackorwhite>().ng.pColor == "Black")
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(
+                    "VarianSelection",
+                    UnityEngine.SceneManagement.LoadSceneMode.Single
+                );
+            }
+            else
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(
+                    "VarianSelectionbl",
+                    UnityEngine.SceneManagement.LoadSceneMode.Single
+                );
+            }
+        }
+    }
     private void playAI()
     {
         Debug.Log("play AI");
         SceneManager.LoadScene("GameAI");
     }
 
+    private void togamea()
+    {
+        if(ng.status == "host")
+        {
+            hostready = true;
+        }
+        else
+        {
+            {
+                clientready = true;
+            }
+        }
+    }
+
+    private void Update()
+    {
+        if (hostready && clientready)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        }
+    }
+
     private void login()
     {
+        Debug.Log("logging in");
         StartCoroutine(ng.GetUserFromServer(emaillogin.GetComponent<TMPro.TMP_InputField>().text, passswordlogin.GetComponent<TMPro.TMP_InputField>().text));
     }
 
@@ -64,7 +174,7 @@ public class Connecttoserver : MonoBehaviour
         Debug.Log("hosting");
         NetworkManager.Singleton.StartHost();
         ng.pColor = "White";
-        NetworkManager.Singleton.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        NetworkManager.Singleton.SceneManager.LoadScene("VarianSelection", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
     IEnumerator GetDateFromServer()
@@ -113,7 +223,7 @@ public class Connecttoserver : MonoBehaviour
 
         if (tosserNetworkObject.IsSpawned)
         {
-            tosser.GetComponent<blackorwhite>().PlayerAdd("http://localhost/testdating/getuser.php?user_id=2");
+            tosser.GetComponent<blackorwhite>().PlayerAdd();
         }
         else
         {

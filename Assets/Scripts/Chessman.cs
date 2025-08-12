@@ -20,6 +20,7 @@ public class Chessman : NetworkBehaviour
     public GameObject button;
     public GameObject controller;
     public GameObject plate;
+    public Piece template;
     public NetworkVariable<FixedString64Bytes> player =
     new NetworkVariable<FixedString64Bytes>();
     public NetworkVariable<FixedString64Bytes> piecename =
@@ -80,26 +81,47 @@ public class Chessman : NetworkBehaviour
             case "wh_king": this.GetComponent<SpriteRenderer>().sprite = wh_king; break;
         }
 
-        SetCoords();
-        foreach (Piece variantee in controller.GetComponent<Game>().draft.army)
-        {
-            Debug.Log("Checking variant suit: " + variantee.suit);
-            Debug.Log("piecename: " + this.name);
-
-            if (this.name.EndsWith(variantee.suit))
+        foreach(Piece s in controller.GetComponent<Game>().draft.army){
+            if (this.name.EndsWith(s.suit))
             {
-                Debug.Log("Match found for suit: " + variantee.suit + ". Cloning variant...");
-                variant = variantee.Clone();
-                variant.owner = this.GetComponent<Chessman>();
-                Debug.Log("Variant cloned and owner assigned.");
-            }
-            else
-            {
-                Debug.Log("No match for: " + variantee.suit);
+                Debug.Log(s.name);
+                variant = s.Clone();
+                variant.owner = GetComponent<Chessman>();
             }
         }
 
+        SetCoords();
+
     }
+
+    [ClientRpc(RequireOwnership = false)]
+    void gjClientRpc()
+    {
+        foreach(var b in controller.GetComponent<Game>().draft.army)
+        {
+            Debug.Log(b.Skin);
+            template = b.Clone();
+            Debug.Log(player.Value.ToString());
+            Debug.Log(controller.GetComponent<Game>().currentColor.pColor);
+            if (this.name.EndsWith(template.suit))
+            {
+                if(player.Value.ToString() == controller.GetComponent<Game>().currentColor.pColor)
+                {
+                    variant = template.Clone();
+                    variant.owner = GetComponent<Chessman>();
+                    setvariantServerRpc();
+                }
+            }
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void setvariantServerRpc()
+    {
+        variant = template.Clone();
+        variant.owner = GetComponent<Chessman>();
+    }
+
     public void SetCoords()
     {
         float x = xBoard.Value;
@@ -146,6 +168,12 @@ public class Chessman : NetworkBehaviour
 
     public void killbutt()
     {
+        killbuttClientRpc();
+    }
+
+    [ClientRpc(RequireOwnership = false)]
+    public void killbuttClientRpc ()
+    {
         Debug.Log("kill");
         GameObject[] butts = GameObject.FindGameObjectsWithTag("skillbutt");
         Debug.Log(butts);
@@ -157,10 +185,9 @@ public class Chessman : NetworkBehaviour
 
     public void InitiateMovePlates()
     {
-        switch (this.name)
+        switch (this.variant.move)
         {
-            case "bl_queen":
-            case "wh_queen":
+            case "AnyDirectionMove":
                 LineMoveServerRpc(1, 0);
                 LineMoveServerRpc(0, 1);
                 LineMoveServerRpc(-1, 0);
@@ -170,36 +197,38 @@ public class Chessman : NetworkBehaviour
                 LineMoveServerRpc(1, -1);
                 LineMoveServerRpc(-1, -1);
                 break;
-            case "bl_knight":
-            case "wh_knight":
+
+            case "L-Move":
                 LMoveServerRpc();
                 break;
-            case "bl_bishop":
-            case "wh_bishop":
+
+            case "DiagonalMove":
                 LineMoveServerRpc(1, 1);
                 LineMoveServerRpc(-1, 1);
                 LineMoveServerRpc(1, -1);
                 LineMoveServerRpc(-1, -1);
                 break;
-            case "bl_rook":
-            case "wh_rook":
+
+            case "LineMove":
                 LineMoveServerRpc(1, 0);
                 LineMoveServerRpc(0, 1);
                 LineMoveServerRpc(-1, 0);
                 LineMoveServerRpc(0, -1);
                 break;
-            case "bl_king":
-            case "wh_king":
+
+            case "OneStepAnyDirection":
                 SurroundMoveServerRpc();
                 break;
-            case "bl_pawn":
-                PawnMoveServerRpc(xBoard.Value, yBoard.Value - 1);
-                break;
-            case "wh_pawn":
-                PawnMoveServerRpc(xBoard.Value, yBoard.Value + 1);
+
+            case "ForwardOneStep":
+                if (this.player.Value == "White")
+                    PawnMoveServerRpc(xBoard.Value, yBoard.Value + 1);
+                else
+                    PawnMoveServerRpc(xBoard.Value, yBoard.Value - 1);
                 break;
         }
     }
+
 
     [ServerRpc(RequireOwnership = false)]
     public void LineMoveServerRpc(int xIncrement, int yIncrement)
@@ -397,11 +426,13 @@ public class Chessman : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void EffectSpawnServerRpc(int type, int matrixX, int matrixY)
     {
+        Debug.Log("lsaddddd");
         butactuallyServerRpc(type, matrixX, matrixY);
     }
     [ServerRpc(RequireOwnership = false)]
     public void butactuallyServerRpc(int type, int matrixX, int matrixY)
     {
+        Debug.Log("lsadfewrbre"+type);
         float x = matrixX;
         float y = matrixY;
         GameObject mp;
@@ -409,22 +440,33 @@ public class Chessman : NetworkBehaviour
         switch (type)
         {
             case 0:
+                Debug.Log(type + "lsad" + x + " " + y);
                 for (int i = 1; i < 4; i++)
                 {
                     Game sc = controller.GetComponent<Game>();
-                    if (sc.GetPos(matrixX, matrixY + i) != null && sc.GetPos(matrixX, matrixY + i).GetComponent<Chessman>().player.Value != player.Value)
-                    {
+                    int mod = player.Value == "White" ? 1 : -1;
+                    int targetY = matrixY + (i * mod);
 
-                    }
-                    else if (sc.GetPos(matrixX, matrixY + i) == null)
+                    Debug.Log(matrixX + " " + targetY);
+
+                    var pos = sc.GetPos(matrixX, targetY); // only get once
+
+                    if (pos != null && pos.GetComponent<Chessman>().player.Value != player.Value)
                     {
-                        MovePlateSpawnServerRpc(matrixX, matrixY + i, 1);
+                        Debug.Log("Attacking");
+                        MovePlateAttackSpawnServerRpc(matrixX, targetY, 1);
+                    }
+                    else if (pos == null)
+                    {
+                        Debug.Log("null");
+                        MovePlateSpawnServerRpc(matrixX, targetY, 1);
                     }
                 }
                 break;
             case 1:
                 x = matrixX;
                 y = matrixY;
+                Debug.Log("lsad" + x + " " + y);
                 x *= 1.0f;
                 y *= 1.0f;
                 x += -3.5f;
@@ -435,14 +477,16 @@ public class Chessman : NetworkBehaviour
                 mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
                 mpScript.SetCoords(matrixX, matrixY);
                 mpScript.controller = controller;
+                mp.GetComponent<NetworkObject>().Spawn();
                 mpScript.SetColorClientRpc(new Color(1f, 0f, 0f, 1f));
                 break;
         }
     }
-    [ServerRpc(RequireOwnership = false)]
-    public void ActionsServerRpc()
+
+    public void Actions()
     {
-        if(variant != null)
+        Debug.Log(player.Value.ToString());
+        if(variant != null && controller.GetComponent<Game>().currentPlayer.Value.ToString() == player.Value.ToString())
         {
             variant.Passive();
         }
@@ -451,6 +495,7 @@ public class Chessman : NetworkBehaviour
     {
         Debug.Log("running check" + hasMoved.Value);
     }
+
     public void SetButton()
     {
         if (variant != null)
@@ -499,7 +544,6 @@ public class Chessman : NetworkBehaviour
             if(ability.name == name)
             {
                 Debug.Log(ability);
-                killbutt();
                 SkillServerRpc(name, ability.type);
             }
         }
@@ -507,6 +551,7 @@ public class Chessman : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void SkillServerRpc(string name, string type)
     {
+        Debug.Log($"{variant.name}/{name}");
         switch (type)
         {
             case "premove":
@@ -527,7 +572,7 @@ public class Chessman : NetworkBehaviour
     }
     void Update()
     {
-        ActionsServerRpc();
+        Actions();
         if (hasMoved.Value && hasSpelled.Value)
         {
             changeturnServerRpc();

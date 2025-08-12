@@ -21,8 +21,15 @@ public class friendss : MonoBehaviour
 
     public void sendrequest()
     {
-        Debug.Log(int.Parse(player.data.user_id) + "" + int.Parse(playerData.user_id));
-        StartCoroutine(PostRequest(int.Parse(player.data.user_id), int.Parse(playerData.user_id)));
+        if(player.data.user_id != playerData.user_id)
+        {
+            Debug.Log(int.Parse(player.data.user_id) + "" + int.Parse(playerData.user_id));
+            StartCoroutine(PostRequest(int.Parse(player.data.user_id), int.Parse(playerData.user_id)));
+        }
+        else
+        {
+            Debug.Log("sad");
+        }
     }
 
     private IEnumerator PostRequest(int a, int b)

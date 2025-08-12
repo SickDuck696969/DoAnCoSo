@@ -39,17 +39,17 @@ public class blackorwhite : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void changesceneServerRpc()
     {
-        NetworkManager.Singleton.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        NetworkManager.Singleton.SceneManager.LoadScene("VarianSelection", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
-    public void PlayerAdd(string url)
+    public void PlayerAdd()
     {
         int Temp = init.Value;
         flipcoinServerRpc(Temp);
-        StartCoroutine(DelayedInit(Temp, url));
+        StartCoroutine(DelayedInit(Temp));
         
     }
 
-    private IEnumerator DelayedInit(int Temp, string url)
+    private IEnumerator DelayedInit(int Temp)
     {
         yield return new WaitForSeconds(2f);
         Debug.Log("init " + init.Value + " Temp: " + Temp);

@@ -407,7 +407,7 @@ GameObject:
   - component: {fileID: -5894664739192863901}
   m_Layer: 5
   m_Name: Image 2
-  m_TagString: friend
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -485,14 +485,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerData:
-    user_id: 
+    user_id: 0
     username: 
     email: 
-    passsword: 
     fullname: 
     bday: 
     createwhen: 
-    History: 
+    history: 
+    confirmed: 0
+    rejected: 0
   player: {fileID: 11400000, guid: bccf6da95a9fbe44e87cc0289dd71219, type: 2}
 --- !u!1 &8823863981167681811
 GameObject:

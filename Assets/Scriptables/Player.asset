@@ -13,13 +13,16 @@ MonoBehaviour:
   m_Name: Player
   m_EditorClassIdentifier: 
   data:
-    user_id: 3
-    username: 
-    email: 
-    passsword: 
+    user_id: 13
+    username: Gaylorl
+    email: banhmi2@gmail.com
+    passsword: $2y$10$FUHo.F15vmGSeyCBD.uBZ.F4M/KIeio/PwdC/k2tyeIZPy9oIoVvK
     fullname: 
-    bday: 
-    createwhen: 
+    bday: 0000-00-00
+    createwhen: 2025-08-12 04:32:42
     History: 
-  pColor: Black
+  pColor: White
   butt: {fileID: 0}
+  status: 
+  init: 0
+  ip: 192.168.1.5

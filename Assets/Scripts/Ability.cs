@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System;
 using System.Threading;
 using Unity.Netcode;
@@ -8,13 +9,14 @@ using UnityEngine;
 
 public class Ability
 {
-    public string name;
-    public string type;
-    public int AP;
-    public string desc;
+    public string name = "";
+    public string type = "";
+    public int AP = 0;
+    public string desc = "";
     public Chessman owner;
     public virtual void end()
     {
+        owner.killbutt();
         owner.hasSpelled.Value = true;
         owner.controller.GetComponent<Game>().APloseServerRpc(owner.player.Value.ToString(), AP);
     }
@@ -69,21 +71,23 @@ public class TyphoonEngine : Passive
     public TyphoonEngine()
     {
         name = "Typoon Engine";
+        desc = "gain 50AP everytime you move";
     }
     public override void action()
     {
-        if(!owner.hasMoved.Value && !owner.hasSpelled.Value)
+        if(!owner.hasMoved.Value && !owner.hasSpelled.Value && owner.player.Value.ToString() == owner.controller.GetComponent<Game>().currentPlayer.Value.ToString())
         {
+            Debug.Log(owner.controller.GetComponent<Game>().currentColor.pColor);
             locked = false;
         }
         if(!locked && owner.hasMoved.Value)
         {
             if(owner.player.Value == "Black")
             {
-                owner.controller.GetComponent<Game>().black_AP += 150;
+                owner.controller.GetComponent<Game>().APloseServerRpc("Black", -150);
             } else if (owner.player.Value == "White")
             {
-                owner.controller.GetComponent<Game>().white_AP += 150;
+                owner.controller.GetComponent<Game>().APloseServerRpc("White", -150);
             }
             locked = true;
         }
@@ -96,6 +100,7 @@ public class Skid : PostMove
     {
         name = "Skid";
         AP = 1100;
+        desc = "After moving your L-Move if theres a piece diagnally infront of you you get to move in and capture it.";
     }
     public override void action()
     {
@@ -130,7 +135,7 @@ public class Skid : PostMove
         }
         catch (IndexOutOfRangeException ex)
         {
-            owner.SetButton();
+            Debug.Log("out o range");
         }
 
     }
@@ -141,6 +146,7 @@ public class Pass : PostMove
     {
         name = "Pass";
         AP = 0;
+        desc = "pass";
     }
     public override void action()
     {
@@ -153,13 +159,16 @@ public class KnightKick : PreMove
     {
         name = "Knight Kick";
         AP = 2200;
+        desc = "Attack any one of 4 squares in  front of you except ones already occupied by an ally piece, the landing have residue damage on adjacent pieces enemy or ally equal to your PV - victim PV/10. ";
     }
     public override void action()
     {
+        Debug.Log("lsad");
         Game sc = owner.controller.GetComponent<Game>();
         int x = owner.xBoard.Value;
         int y = owner.yBoard.Value;
         owner.hasMoved.Value = true;
+        owner.killbutt();
         owner.EffectSpawnServerRpc(0, x, y);
         end();
     }
@@ -170,6 +179,7 @@ public class ChoHenshin : PreMove
     {
         name = "Cho Henshin";
         AP = 1250;
+        desc = "henshin";
     }
 }
 
@@ -178,11 +188,13 @@ public class Move : PreMove
     public Move()
     {
         name = "Move";
+        desc = "move";
     }
     public override void action()
     {
         owner.hasMoved.Value = true;
         Debug.Log(owner.variant);
+        owner.killbutt();
         owner.InitiateMovePlates();
     }
 }

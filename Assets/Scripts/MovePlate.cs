@@ -51,6 +51,7 @@ public class MovePlate : NetworkBehaviour
         {
             controller.GetComponent<Game>().Winner(cmRef.player.Value.ToString());
         }
+        sc.APloseServerRpc(cmRef.player.Value.ToString(), -cp.GetComponent<Chessman>().variant.PV);
         cp.GetComponent<NetworkObject>().Despawn();
     }
 

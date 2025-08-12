@@ -11,6 +11,7 @@ public class adjustbox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
     private float targetWidth;
     private float originalWidth;
     public float expandedWidth = 300f;
+    public float d = 30;
 
     void Start()
     {
@@ -30,7 +31,7 @@ public class adjustbox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        padding = originalWidth + 300;
+        padding = originalWidth + d;
     }
 
     public void OnPointerExit(PointerEventData eventData)

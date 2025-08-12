@@ -233,9 +233,6 @@ public class Gameoff : MonoBehaviour
             {
                 generatefen();
             }
-        }else
-        {
-            generatefen();
         }
     }
 

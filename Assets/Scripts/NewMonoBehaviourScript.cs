@@ -7,15 +7,15 @@ using System.Collections;
 public class NewMonoBehaviourScript : MonoBehaviour
 {
     public Player a;
-    public PlayerData c;
+    public Friend c;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         this.name = c.username;
         this.transform.Find("name").GetComponent<TMP_Text>().text = c.username;
-        this.transform.Find("name (1)").GetComponent<TMP_Text>().text = c.user_id;
-        this.transform.Find("Confirm").GetComponent<Button>().onClick.AddListener(() => conf(a.data.user_id, c.user_id));
-        this.transform.Find("Reject").GetComponent<Button>().onClick.AddListener(() => rej(a.data.user_id, c.user_id));
+        this.transform.Find("name (1)").GetComponent<TMP_Text>().text = c.user_id.ToString();
+        this.transform.Find("Confirm").GetComponent<Button>().onClick.AddListener(() => conf(a.data.user_id, c.user_id.ToString()));
+        this.transform.Find("Reject").GetComponent<Button>().onClick.AddListener(() => rej(a.data.user_id, c.user_id.ToString()));
     }
     [System.Serializable]
     public class ConfirmRequest
@@ -61,8 +61,8 @@ public class NewMonoBehaviourScript : MonoBehaviour
     {
         ConfirmRequest requestData = new ConfirmRequest
         {
-            user_id = userId,
-            friend_id = friendId
+            user_id = friendId,
+            friend_id = userId
         };
 
         string jsonData = JsonUtility.ToJson(requestData);

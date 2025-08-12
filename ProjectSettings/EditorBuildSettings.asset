@@ -20,6 +20,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GameAI.unity
     guid: 818000e15e0b3bc4d97bf5747ddda1aa
+  - enabled: 1
+    path: Assets/Scenes/VarianSelection.unity
+    guid: c46a211a3ad031e438f1c702d82739d0
+  - enabled: 0
+    path: Assets/Scenes/VarianSelectionbl.unity
+    guid: 095e692e499f811449852c7238df743e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -14,6 +15,7 @@ using UnityEngine.UI;
 
 public class Game : NetworkBehaviour
 {
+    public GameObject bg;
     public Army draft;
     public GameObject piece;
     public NetworkObject[,] positions = new NetworkObject[8, 8];
@@ -25,8 +27,18 @@ public class Game : NetworkBehaviour
     public NetworkVariable<FixedString64Bytes> currentColorid = new NetworkVariable<FixedString64Bytes>();
     public Player currentColor;
     private bool gameOver = false;
-    public int white_AP = 5500;
-    public int black_AP = 5500;
+    public NetworkVariable<int> white_AP = new NetworkVariable<int>(
+    5500, // initial value
+        NetworkVariableReadPermission.Everyone, // who can read
+        NetworkVariableWritePermission.Server   // who can write
+    );
+    public NetworkVariable<int> black_AP = new NetworkVariable<int>(
+    5500, // initial value
+        NetworkVariableReadPermission.Everyone, // who can read
+        NetworkVariableWritePermission.Server   // who can write
+    );
+    public TMP_Text whitedisplay;
+    public TMP_Text blackdisplay;
 
     public override void OnNetworkSpawn()
     {
@@ -87,7 +99,7 @@ public class Game : NetworkBehaviour
             Create("bl_pawn", 0, 6),
             Create("bl_pawn", 1, 6),
             Create("bl_pawn", 2, 6),
-            Create("bl_pawn", 3, 2),
+            Create("bl_pawn", 3, 6),
             Create("bl_pawn", 4, 6),
             Create("bl_pawn", 5, 6),
             Create("bl_pawn", 6, 6),
@@ -174,6 +186,23 @@ public class Game : NetworkBehaviour
 
     public void Update()
     {
+        bg = GameObject.FindGameObjectWithTag("bg");
+        whitedisplay = GameObject.FindGameObjectWithTag("WhiteAP").GetComponent<TMP_Text>();
+        blackdisplay = GameObject.FindGameObjectWithTag("BlackAP").GetComponent<TMP_Text>();
+        if (currentPlayer.Value == "White")
+        {
+            whitedisplay.color = Color.white;
+            blackdisplay.color = Color.white;
+            bg.GetComponent<Image>().sprite = Resources.Load<Sprite>("whtie_bg");
+        }
+        else
+        {
+            whitedisplay.color = Color.black;
+            blackdisplay.color = Color.black;
+            bg.GetComponent<Image>().sprite = Resources.Load<Sprite>("black_bg");
+        }
+        whitedisplay.text = white_AP.Value.ToString();
+        blackdisplay.text = black_AP.Value.ToString();
         if (!IsOwner) return;
         if (gameOver && Input.GetMouseButtonDown(0))
         {
@@ -181,12 +210,16 @@ public class Game : NetworkBehaviour
             init();
         }
     }
-
+    [ServerRpc(RequireOwnership = false)]
+    public void changebgServerRpc(string a)
+    {
+        bg.GetComponent<Image>().sprite = Resources.Load<Sprite>(a);
+    }
     [ServerRpc(RequireOwnership =false)]
     public void APloseServerRpc(string color, int amount)
     {
-        if (color == "White") white_AP -= amount;
-        else if (color == "Black") black_AP -= amount;
+        if (color == "White") white_AP.Value -= amount;
+        else if (color == "Black") black_AP.Value -= amount;
     }
     
     public void Winner(string playerWinner)
