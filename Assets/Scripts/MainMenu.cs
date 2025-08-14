@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
+    public GameObject LogoutConfirmPanel;
+    public GameObject LoginConfirmPanel;
+    public GameObject RegisConfirmPanel;
     public GameObject RoomPanel;
     public GameObject ChooseModePanel;
     public GameObject LoginPanel;
@@ -100,10 +103,21 @@ public class MainMenu : MonoBehaviour
         ChooseModePanel.SetActive(false);
         RoomPanel.SetActive(false);
         ChatPanel.SetActive(false);
+        RegisConfirmPanel.SetActive(false);
+        LoginConfirmPanel.SetActive(false);
+        LogoutConfirmPanel.SetActive(false);
     }
     public void Restart()
     {
-        SceneManager.LoadSceneAsync("GameOffline");
+        string sceneName = SceneManager.GetActiveScene().name;
+        if (sceneName == "GameOffline")
+        {
+            SceneManager.LoadSceneAsync("GameOffline");
+        }
+        else if (sceneName == "GameAI")
+        {
+            SceneManager.LoadSceneAsync("GameAI");
+        }
     }
     public void PauseGame()
     {
@@ -116,5 +130,20 @@ public class MainMenu : MonoBehaviour
     public void OpenChat()
     {
         ChatPanel.SetActive(true);
+    }
+    public void RegisConfirm()
+    { 
+        CloseSettings();
+        RegisConfirmPanel.SetActive(true);
+    }
+    public void LoginConfirm()
+    {
+        CloseSettings();
+        LoginConfirmPanel.SetActive(true);
+    }
+    public void LogoutConfirm()
+    { 
+        CloseSettings();
+        LogoutConfirmPanel.SetActive(true);
     }
 }
