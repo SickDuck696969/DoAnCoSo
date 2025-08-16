@@ -1,23 +1,5 @@
-using System;
-using System.Collections;
-using System.Drawing;
-using System.Xml.Serialization;
-using TMPro;
-using Unity.Collections;
-using Unity.Multiplayer.Playmode;
-using Unity.Multiplayer.Playmode;
 using Unity.Netcode;
-using Unity.Netcode;
-using Unity.VisualScripting;
-using UnityEditor.PackageManager;
 using UnityEngine;
-using UnityEngine;
-using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.Networking;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using UnityEngine.WSA;
-using static UnityEditor.UIElements.ToolbarMenu;
 
 public class MovePlate : NetworkBehaviour
 {
@@ -116,6 +98,19 @@ public class MovePlate : NetworkBehaviour
         }
         else cmRef.changeturnServerRpc();
         cmRef.DestroyMovePlatesServerRpc();
+        if (esploding.Value)
+        {
+            for (int i = matrixX - 1; i <= matrixX + 1; i++)
+            {
+                for (int y = matrixY - 1; y <= matrixY + 1; y++)
+                {
+                    if (!(i == matrixX && y == matrixY))
+                    {
+                        cmRef.MovePlateSpawnServerRpc(i, y, 1);
+                    }
+                }
+            }
+        }
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayMoveSFX();
@@ -145,19 +140,6 @@ public class MovePlate : NetworkBehaviour
         cmRef.hasMoved.Value = true;
         cmRef.xmodifier.Value = ((matrixX - startX) > 0) ? 1 : -1;
         cmRef.ymodifier.Value = ((matrixY - startY) > 0) ? 1 : -1;
-        if (esploding.Value)
-        {
-            for (int i = matrixX - 1; i <= matrixX + 1; i++)
-            {
-                for (int y = matrixY - 1; y <= matrixY + 1; y++)
-                {
-                    if (!(i == matrixX && y == matrixY))
-                    {
-                        cmRef.EffectSpawnServerRpc(1, i, y);
-                    }
-                }
-            }
-        }
     }
 
     [ClientRpc]
@@ -189,5 +171,30 @@ public class MovePlate : NetworkBehaviour
     public virtual void Update()
     {
 
+    }
+}
+public class explosionplate : MovePlate
+{
+    public override void Update()
+    {
+        NetworkObject refObj;
+        Debug.Log("Spawned");
+        if (!reference.Value.TryGet(out refObj))
+        {
+            Debug.LogError("Failed to resolve NetworkObjectReference in MovePlate.OnMouseUp!");
+            return;
+        }
+        Chessman cmRef = refObj.GetComponent<Chessman>();
+        NetworkObject cp = controller.GetComponent<Game>().GetPos(matrixX, matrixY);
+        if (cp != null && cp.GetComponent<Chessman>().variant != null)
+        {
+            controller.GetComponent<Game>().APloseServerRpc(cp.GetComponent<Chessman>().player.Value.ToString(), cmRef.variant.PV - (cp.GetComponent<Chessman>().variant.PV / 10));
+            cmRef.DestroyMovePlatesServerRpc();
+        }
+        else
+        {
+            Debug.Log("Target dont have variant");
+            cmRef.DestroyMovePlatesServerRpc();
+        }
     }
 }

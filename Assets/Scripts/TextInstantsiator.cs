@@ -4,7 +4,8 @@ using Unity.Netcode;
 
 public class TextInstantiator : NetworkBehaviour
 {
-    public GameObject whitePrefab;
+    public GameObject messagePrefab;
+    public Player player;
 
     void Update()
     {
@@ -12,8 +13,9 @@ public class TextInstantiator : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
-            string message = GetComponent<TMP_InputField>().text;
+            string message = player.data.username + ": " + GetComponent<TMP_InputField>().text;
             SubmitMessageServerRpc(message);
+            GetComponent<TMP_InputField>().text = "";
         }
     }
 
@@ -27,10 +29,8 @@ public class TextInstantiator : NetworkBehaviour
     [ClientRpc]
     void SpawnMessageClientRpc(string message, ClientRpcParams rpcParams = default)
     {
-        // Each client finds their own blackParent by tag or other method
-        Transform blackParent = GameObject.FindGameObjectWithTag("Black").transform;
-
-        GameObject obj = Instantiate(whitePrefab, blackParent);
-        obj.GetComponentInChildren<TMP_Text>().text = message;
+        GameObject msg = Instantiate(messagePrefab, this.transform.parent.Find("Viewport/Content"));
+        TMP_Text tmp = msg.GetComponentInChildren<TMP_Text>();
+        tmp.text = message;
     }
 }

@@ -1,11 +1,11 @@
+using System.IO;
 using TMPro;
-using UnityEngine;
-using UnityEngine.Assertions.Must;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using Unity.Netcode;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.UI;
 
-public class variantchoso : MonoBehaviour
+public class variantchoso : NetworkBehaviour
 {
     public Piece variant;
     public Army draft;
@@ -25,13 +25,92 @@ public class variantchoso : MonoBehaviour
         this.GetComponent<Image>().sprite = variant.Skin;
         if(this.GetComponent<Image>().sprite != null)
         {
-            this.GetComponent<Image>().color = Color.white; ;
+            this.GetComponent<Image>().color = UnityEngine.Color.white; ;
         }else
         {
             float alpha = 114f / 255f;
-            Color customColor = new Color(0f, 0f, 0f, alpha);
-            if(l.pColor == "White") customColor = new Color(1f, 1f, 1f, alpha);
+            UnityEngine.Color customColor = new UnityEngine.Color(0f, 0f, 0f, alpha);
+            if(l.pColor == "White") customColor = new UnityEngine.Color(1f, 1f, 1f, alpha);
             this.GetComponent<Image>().color = customColor;
+        }
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void AssignArmyServerRpc(string color, string name, string skin)
+    {
+        foreach (var variant in draft.roster)
+        {
+            if (name == variant.name)
+            {
+                if (color == "White")
+                {
+                    Piece a = variant.Clone();
+                    a.Skin = Resources.Load<Sprite>(skin);
+                    Debug.Log(a.name + " " + a.Skin);
+                    foreach (Piece cp in draft.whitearmy)
+                    {
+                        if (cp.suit == variant.suit)
+                        {
+                            draft.whitearmy[draft.whitearmy.IndexOf(cp)] = a.Clone();
+                            break;
+                        }
+                    }
+                    draft.PrintwhiteArmy();
+                }
+                else if (color == "Black")
+                {
+                    Piece a = variant.Clone();
+                    a.Skin = Resources.Load<Sprite>(skin);
+                    Debug.Log(a.name + " " + a.Skin);
+                    foreach (Piece cp in draft.blackarmy)
+                    {
+                        if (cp.suit == variant.suit)
+                        {
+                            draft.blackarmy[draft.blackarmy.IndexOf(cp)] = a.Clone();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        AssignArmyClientRpc(color, name, skin);
+    }
+    [ClientRpc(RequireOwnership = false)]
+    public void AssignArmyClientRpc(string color, string name, string skin)
+    {
+        foreach (var variant in draft.roster)
+        {
+            if (name == variant.name)
+            {
+                if (color == "White")
+                {
+                    Piece a = variant.Clone();
+                    a.Skin = Resources.Load<Sprite>(skin);
+                    Debug.Log(a.name + " " + a.Skin);
+                    foreach (Piece cp in draft.whitearmy)
+                    {
+                        if (cp.suit == variant.suit)
+                        {
+                            draft.whitearmy[draft.whitearmy.IndexOf(cp)] = a.Clone();
+                            break;
+                        }
+                    }
+                    draft.PrintwhiteArmy();
+                }
+                else if (color == "Black")
+                {
+                    Piece a = variant.Clone();
+                    a.Skin = Resources.Load<Sprite>(skin);
+                    Debug.Log(a.name + " " + a.Skin);
+                    foreach (Piece cp in draft.blackarmy)
+                    {
+                        if (cp.suit == variant.suit)
+                        {
+                            draft.blackarmy[draft.blackarmy.IndexOf(cp)] = a.Clone();
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -55,9 +134,9 @@ public class variantchoso : MonoBehaviour
                         GameObject a = GameObject.Instantiate(abi, p.transform.Find("Canvas/Image"));
                         if(l.pColor == "White")
                         {
-                            a.transform.Find("name").GetComponent<TMP_Text>().color  = Color.white;
+                            a.transform.Find("name").GetComponent<TMP_Text>().color  = UnityEngine.Color.white;
                             a.transform.Find("name").GetComponent<TMP_Text>().text = g.name;
-                            a.transform.Find("AP").GetComponent<TMP_Text>().color = Color.white;
+                            a.transform.Find("AP").GetComponent<TMP_Text>().color = UnityEngine.Color.white;
                             if (g.AP != 0)
                             {
                                 a.transform.Find("AP").GetComponent<TMP_Text>().text = g.AP.ToString();
@@ -70,7 +149,7 @@ public class variantchoso : MonoBehaviour
                             }
                             a.transform.Find("type").GetComponent<TMP_Text>().color = new Color32(0, 150, 254, 255);
                             a.transform.Find("type").GetComponent<TMP_Text>().text = g.type;
-                            a.transform.Find("Image").GetComponent<Image>().color = Color.white;
+                            a.transform.Find("Image").GetComponent<Image>().color = UnityEngine.Color.white;
                         }
                         else
                         {
@@ -93,15 +172,7 @@ public class variantchoso : MonoBehaviour
 
                 }
             }
-            foreach (Piece cp in draft.army)
-            {
-                if (cp.suit == variant.suit)
-                {
-                    draft.army[draft.army.IndexOf(cp)] = variant.Clone();
-                    draft.Mu();
-                    break;
-                }
-            }
+            AssignArmyServerRpc(l.pColor, variant.name, variant.Skin.name);
         }
     }
 }

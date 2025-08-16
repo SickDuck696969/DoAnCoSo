@@ -1,18 +1,8 @@
-using System;
-using System.Collections;
 using TMPro;
 using Unity.Collections;
-using Unity.Multiplayer.Playmode;
 using Unity.Netcode;
-using Unity.VisualScripting;
-using UnityEditor.PackageManager;
-using UnityEditor.Playables;
 using UnityEngine;
-using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.Networking;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.WSA;
 
 
 public class Chessman : NetworkBehaviour
@@ -63,63 +53,36 @@ public class Chessman : NetworkBehaviour
 
     public void Activate()
     {
-        switch (this.name)
-        {
-            case "bl_queen": this.GetComponent<SpriteRenderer>().sprite = bl_queen; break;
-            case "bl_rook": this.GetComponent<SpriteRenderer>().sprite = bl_rook; break;
-            case "bl_bishop": this.GetComponent<SpriteRenderer>().sprite = bl_bishop; break;
-            case "bl_knight": 
-                this.GetComponent<SpriteRenderer>().sprite = bl_knight; 
-                break;
-            case "bl_pawn": this.GetComponent<SpriteRenderer>().sprite = bl_pawn; break;
-            case "bl_king": this.GetComponent<SpriteRenderer>().sprite = bl_king; break;
-            case "wh_queen": this.GetComponent<SpriteRenderer>().sprite = wh_queen; break;
-            case "wh_rook": this.GetComponent<SpriteRenderer>().sprite = wh_rook; break;
-            case "wh_bishop": this.GetComponent<SpriteRenderer>().sprite = wh_bishop; break;
-            case "wh_knight": this.GetComponent<SpriteRenderer>().sprite = wh_knight; break;
-            case "wh_pawn": this.GetComponent<SpriteRenderer>().sprite = wh_pawn; break;
-            case "wh_king": this.GetComponent<SpriteRenderer>().sprite = wh_king; break;
-        }
-
-        foreach(Piece s in controller.GetComponent<Game>().draft.army){
-            if (this.name.EndsWith(s.suit))
-            {
-                Debug.Log(s.name);
-                variant = s.Clone();
-                variant.owner = GetComponent<Chessman>();
-            }
-        }
-
         SetCoords();
 
-    }
-
-    [ClientRpc(RequireOwnership = false)]
-    void gjClientRpc()
-    {
-        foreach(var b in controller.GetComponent<Game>().draft.army)
+        switch (this.name)
         {
-            Debug.Log(b.Skin);
-            template = b.Clone();
-            Debug.Log(player.Value.ToString());
-            Debug.Log(controller.GetComponent<Game>().currentColor.pColor);
-            if (this.name.EndsWith(template.suit))
-            {
-                if(player.Value.ToString() == controller.GetComponent<Game>().currentColor.pColor)
+            case string s when s.StartsWith("bl_"):
+                foreach (Piece sa in controller.GetComponent<Game>().draft.blackarmy)
                 {
-                    variant = template.Clone();
-                    variant.owner = GetComponent<Chessman>();
-                    setvariantServerRpc();
+                    if (this.name.EndsWith(sa.suit))
+                    {
+                        Debug.Log(sa.name);
+                        this.variant = sa.Clone();
+                        this.variant.owner = this.GetComponent<Chessman>();
+                        this.GetComponent<SpriteRenderer>().sprite = variant.Skin;
+                    }
                 }
-            }
+                break;
+            case string s when s.StartsWith("wh_"):
+                this.player.Value = "White";
+                foreach (Piece sa in controller.GetComponent<Game>().draft.whitearmy)
+                {
+                    if (this.name.EndsWith(sa.suit))
+                    {
+                        Debug.Log(sa.name); 
+                        this.variant = sa.Clone();
+                        this.variant.owner = this.GetComponent<Chessman>();
+                        this.GetComponent<SpriteRenderer>().sprite = variant.Skin;
+                    }
+                }
+                break;
         }
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    void setvariantServerRpc()
-    {
-        variant = template.Clone();
-        variant.owner = GetComponent<Chessman>();
     }
 
     public void SetCoords()
@@ -141,18 +104,13 @@ public class Chessman : NetworkBehaviour
 
     private void OnMouseUp()
     {
-        Debug.Log(variant);
-        Debug.Log(button);
+        Debug.Log(variant.name);
         Debug.Log(controller.GetComponent<Game>().GetCurrentPlayer() + " " + this.name + " " + xBoard.Value + " " + yBoard.Value + " " + player.Value);
         if (!controller.GetComponent<Game>().IsGameOver() && controller.GetComponent<Game>().currentPlayer.Value.ToString() == player.Value && controller.GetComponent<Game>().currentPlayer.Value == controller.GetComponent<Game>().currentColor.pColor)
         {
             DestroyMovePlatesServerRpc();
-            killbutt();
-            if (variant != null)
-            {
-                SetButton();
-            }
-            else { InitiateMovePlates(); }
+            killbuttClientRpc();
+            SetButton();
         }
     }
 
@@ -165,16 +123,10 @@ public class Chessman : NetworkBehaviour
             plate.GetComponent<NetworkObject>().Despawn();
         }
     }
-
-    public void killbutt()
-    {
-        killbuttClientRpc();
-    }
-
     [ClientRpc(RequireOwnership = false)]
-    public void killbuttClientRpc ()
+    public void killbuttClientRpc()
     {
-        Debug.Log("kill");
+        Debug.Log("killin butt on client");
         GameObject[] butts = GameObject.FindGameObjectsWithTag("skillbutt");
         Debug.Log(butts);
         foreach (GameObject butt in butts)
@@ -391,8 +343,20 @@ public class Chessman : NetworkBehaviour
         x += -3.5f;
         y += -3.5f;
         GameObject mp = Instantiate(plate, new Vector3(x, y, -2.0f), Quaternion.identity);
-        MovePlate mpScript = mp.GetComponent<MovePlate>();
-        if (type != 0) mpScript.esploding.Value = true;
+        MovePlate mpScript = null;
+        switch (type)
+        {
+            case 0:
+                mpScript = mp.GetComponent<MovePlate>();
+                break;
+            case 1:
+                mpScript = mp.GetComponent<explosionplate>();
+                break;
+            case 2:
+                mpScript = mp.GetComponent<MovePlate>();
+                mpScript.esploding.Value = true;
+                break;
+        }
         mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
         mpScript.SetCoords(matrixX, matrixY);
         mp.GetComponent<NetworkObject>().Spawn();
@@ -415,77 +379,38 @@ public class Chessman : NetworkBehaviour
         x += -3.5f;
         y += -3.5f;
         GameObject mp = Instantiate(plate, new Vector3(x, y, -2.0f), Quaternion.identity);
-        MovePlate mpScript = mp.GetComponent<MovePlate>();
+        MovePlate mpScript = null;
+        switch (type)
+        {
+            case 0:
+                mpScript = mp.GetComponent<MovePlate>();
+                break;
+
+            case 1:
+                mpScript = mp.GetComponent<explosionplate>();
+                break;
+
+            case 2:
+                mpScript = mp.GetComponent<MovePlate>();
+                mpScript.esploding.Value = true;
+                break;
+        }
         mpScript.attack.Value = true;
-        if (type != 0) mpScript.esploding.Value = true;
         mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
         mpScript.SetCoords(matrixX, matrixY);
         mp.GetComponent<NetworkObject>().Spawn();
         mpScript.SetColorClientRpc(new Color(1f, 0f, 0f, 1f));
     }
+
     [ServerRpc(RequireOwnership = false)]
     public void EffectSpawnServerRpc(int type, int matrixX, int matrixY)
     {
-        Debug.Log("lsaddddd");
-        butactuallyServerRpc(type, matrixX, matrixY);
+        Debug.Log(type);
+        MovePlateAttackSpawnServerRpc(matrixX, matrixY, type);
     }
     [ServerRpc(RequireOwnership = false)]
-    public void butactuallyServerRpc(int type, int matrixX, int matrixY)
+    public void ActionsServerRpc()
     {
-        Debug.Log("lsadfewrbre"+type);
-        float x = matrixX;
-        float y = matrixY;
-        GameObject mp;
-        MovePlate mpScript;
-        switch (type)
-        {
-            case 0:
-                Debug.Log(type + "lsad" + x + " " + y);
-                for (int i = 1; i < 4; i++)
-                {
-                    Game sc = controller.GetComponent<Game>();
-                    int mod = player.Value == "White" ? 1 : -1;
-                    int targetY = matrixY + (i * mod);
-
-                    Debug.Log(matrixX + " " + targetY);
-
-                    var pos = sc.GetPos(matrixX, targetY); // only get once
-
-                    if (pos != null && pos.GetComponent<Chessman>().player.Value != player.Value)
-                    {
-                        Debug.Log("Attacking");
-                        MovePlateAttackSpawnServerRpc(matrixX, targetY, 1);
-                    }
-                    else if (pos == null)
-                    {
-                        Debug.Log("null");
-                        MovePlateSpawnServerRpc(matrixX, targetY, 1);
-                    }
-                }
-                break;
-            case 1:
-                x = matrixX;
-                y = matrixY;
-                Debug.Log("lsad" + x + " " + y);
-                x *= 1.0f;
-                y *= 1.0f;
-                x += -3.5f;
-                y += -3.5f;
-                mp = Instantiate(plate, new Vector3(x, y, -2.0f), Quaternion.identity);
-                mp.AddComponent<explosionplate>();
-                mpScript = mp.GetComponent<explosionplate>();
-                mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
-                mpScript.SetCoords(matrixX, matrixY);
-                mpScript.controller = controller;
-                mp.GetComponent<NetworkObject>().Spawn();
-                mpScript.SetColorClientRpc(new Color(1f, 0f, 0f, 1f));
-                break;
-        }
-    }
-
-    public void Actions()
-    {
-        Debug.Log(player.Value.ToString());
         if(variant != null && controller.GetComponent<Game>().currentPlayer.Value.ToString() == player.Value.ToString())
         {
             variant.Passive();
@@ -538,6 +463,7 @@ public class Chessman : NetworkBehaviour
 
     public void resolve(string name)
     {
+        Debug.Log("resolving " +  name);
         Game sc = controller.GetComponent<Game>();
         foreach (Ability ability in variant.kit)
         {
@@ -572,7 +498,7 @@ public class Chessman : NetworkBehaviour
     }
     void Update()
     {
-        Actions();
+        ActionsServerRpc();
         if (hasMoved.Value && hasSpelled.Value)
         {
             changeturnServerRpc();

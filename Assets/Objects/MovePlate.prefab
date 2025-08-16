@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 4158449804954881538}
   - component: {fileID: 6465586727290408200}
   - component: {fileID: -3900430726431947812}
-  - component: {fileID: -8501512233398987493}
   - component: {fileID: 6249317214212030708}
+  - component: {fileID: 8136673048441658381}
   m_Layer: 0
   m_Name: MovePlate
   m_TagString: MovePlate
@@ -115,26 +115,6 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!114 &-8501512233398987493
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4011540696216096005}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e4155aa18f2ef947a3df0d4ae3945bb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  controller: {fileID: 0}
-  matrixX: 0
-  matrixY: 0
-  attack:
-    m_InternalValue: 0
-  esploding:
-    m_InternalValue: 0
 --- !u!61 &6249317214212030708
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -181,3 +161,23 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.2, y: 0.2}
   m_EdgeRadius: 0
+--- !u!114 &8136673048441658381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4011540696216096005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e4155aa18f2ef947a3df0d4ae3945bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  controller: {fileID: 0}
+  matrixX: 0
+  matrixY: 0
+  attack:
+    m_InternalValue: 0
+  esploding:
+    m_InternalValue: 0

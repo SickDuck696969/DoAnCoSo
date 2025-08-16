@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Piece
+public class Piece 
 {
     public string name;
     public string suit;
@@ -26,7 +26,11 @@ public class Piece
     public virtual Piece Clone()
     {
         Debug.Log("Cloning: Piece");
-        return new Piece();
+        Piece piece = new Piece();
+        piece.name = name;
+        piece.owner = owner;
+        piece.Skin = Skin;
+        return piece;
     }
 }
 
@@ -85,7 +89,11 @@ public class Pawn : Piece
     public override Piece Clone()
     {
         Debug.Log("Cloning: Pawn");
-        return new Pawn();
+        Pawn pawn = new Pawn();
+        pawn.name = name;
+        pawn.owner = owner;
+        pawn.Skin = Skin;
+        return pawn;
     }
 }
 
@@ -144,7 +152,11 @@ public class Knight : Piece
     public override Piece Clone()
     {
         Debug.Log("Cloning: Knight");
-        return new Knight();
+        Knight knight = new Knight();
+        knight.name = name;
+        knight.owner = owner;
+        knight.Skin = Skin;
+        return knight;
     }
 }
 
@@ -165,7 +177,7 @@ public class Bishop : Piece
         {
             if (ability.type == "passive")
             {
-                loaded = ability;
+                loaded = new TyphoonEngine();
                 loaded.owner = owner;
             }
         }
@@ -203,7 +215,11 @@ public class Bishop : Piece
     public override Piece Clone()
     {
         Debug.Log("Cloning: Bishop");
-        return new Bishop();
+        Bishop bishop = new Bishop();
+        bishop.name = name;
+        bishop.owner = owner;
+        bishop.Skin = Skin;
+        return bishop;
     }
 }
 
@@ -262,7 +278,11 @@ public class Rook : Piece
     public override Piece Clone()
     {
         Debug.Log("Cloning: Rook");
-        return new Rook();
+        Rook rook = new Rook();
+        rook.name = name;
+        rook.owner = owner;
+        rook.Skin = Skin;
+        return rook;
     }
 }
 
@@ -321,7 +341,11 @@ public class Queen : Piece
     public override Piece Clone()
     {
         Debug.Log("Cloning: Queen");
-        return new Queen();
+        Queen queen = new Queen();
+        queen.name = name;
+        queen.owner = owner;
+        queen.Skin = Skin;
+        return queen;
     }
 }
 
@@ -380,7 +404,11 @@ public class King : Piece
     public override Piece Clone()
     {
         Debug.Log("Cloning: King");
-        return new King();
+        King king = new King();
+        king.name = name;
+        king.owner = owner;
+        king.Skin = Skin;
+        return king;
     }
 }
 
@@ -469,7 +497,11 @@ public class MaskedKnight : Knight
     public override Piece Clone()
     {
         Debug.Log("Cloning: MaskedKnight");
-        return new MaskedKnight();
+        MaskedKnight maskedknight = new MaskedKnight();
+        maskedknight.name = name;
+        maskedknight.owner = owner;
+        maskedknight.Skin = Skin;
+        return maskedknight;
     }
 }
 
@@ -553,6 +585,10 @@ public class VenomRook : Rook
     public override Piece Clone()
     {
         Debug.Log("Cloning: VenomRook");
-        return new VenomRook();
+        VenomRook venomrook = new VenomRook();
+        venomrook.name = name;
+        venomrook.owner = owner;
+        venomrook.Skin = Skin;
+        return venomrook;
     }
 }

@@ -38,10 +38,19 @@ public class MainMenu : MonoBehaviour
     }
     void Update()
     {
-        ipbox.text = player.ip;
-        if(player.data.username != null)
+        if (ipbox != null)
         {
-            namebox.text = player.data.username;
+            ipbox.text = player.ip;
+        }
+        if (namebox != null)
+        {
+            if (player.data.username != null)
+            {
+                if(namebox != null)
+                {
+                    namebox.text = player.data.username;
+                }
+            }
         }
     }
     public void Play()

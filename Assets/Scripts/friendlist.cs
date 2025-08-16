@@ -12,11 +12,9 @@ public class friendlist : MonoBehaviour
     public UnityEngine.Transform friendspanel;
     public Button butt;
     TMP_InputField input;
-    PlayerData[] sa;
     public GameObject friendprefab;
     public GameObject requestprefabe;
     public GameObject friendconfed;
-    PlayerData[] re;
     public Player f;
     public List<Friend> friendsList = new List<Friend>();
     void Start()
@@ -43,12 +41,8 @@ public class friendlist : MonoBehaviour
         }
         else
         {
-            // Parse JSON response into a list
             string json = www.downloadHandler.text;
-
-            // Wrap array if necessary for JsonUtility
             Friend[] pulledFriends = JsonHelper.FromJson<Friend>(json);
-
             friendsList.Clear();
             if(pulledFriends != null)
             {
@@ -62,7 +56,7 @@ public class friendlist : MonoBehaviour
 
     public void pullplayer()
     {
-        KillChildrenWithTag(transform.Find("Image 1"), "friend", int.Parse(input.text));
+        KillChildrenWithTag(transform.Find("Image 1"), "friendpotential", int.Parse(input.text));
         Debug.Log("Searching for ID: " + input?.text);
         StartCoroutine(GetUserFromServerlmao(input?.text));
     }
@@ -112,7 +106,6 @@ public class friendlist : MonoBehaviour
 
     public void KillChildrenWithTag(UnityEngine.Transform parent, string tag, int id)
     {
-        // We make a temporary list because modifying children while iterating can break the loop
         var toDestroy = new List<GameObject>();
 
         foreach (UnityEngine.Transform child in parent.transform)
@@ -123,7 +116,6 @@ public class friendlist : MonoBehaviour
             }
         }
 
-        // Destroy them after collecting
         foreach (var obj in toDestroy)
         {
             Destroy(obj);
@@ -138,17 +130,8 @@ public class friendlist : MonoBehaviour
             yield return StartCoroutine(GetUserFromServer(f.data.user_id));
             foreach(Friend a in friendsList)
             {
-                if (a.confirmed == 1)
-                {
-                    GameObject friendpep = Instantiate(friendconfed, this.transform.Find("Image 1"));
-                    friendpep.GetComponent<friendlybehaviour>().data = a;
-                }
-                else if (a.confirmed == 0)
-                {
-                    GameObject friendpep = Instantiate(requestprefabe, this.transform.Find("Image 1"));
-                    Debug.Log(a);
-                    friendpep.GetComponent<NewMonoBehaviourScript>().c = a;
-                }
+                GameObject friendpep = Instantiate(friendconfed, this.transform.Find("Image 1"));
+                friendpep.GetComponent<friendlybehaviour>().data = a;
             }
             yield return new WaitForSeconds(5f);
         }
@@ -169,13 +152,10 @@ public class Wrapper<T>
 [System.Serializable]
 public class Friend
 {
+    public int id;
     public int user_id;
+    public int friend_id;
     public string username;
-    public string email;
-    public string fullname;
-    public string bday;
-    public string createwhen;
-    public string history;
     public int confirmed;
     public int rejected;
 }

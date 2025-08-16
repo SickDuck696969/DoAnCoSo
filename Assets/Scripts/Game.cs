@@ -1,15 +1,8 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.OSX;
-using UnityEngine.Networking;
-using UnityEngine.Rendering;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -123,27 +116,25 @@ public class Game : NetworkBehaviour
     }
 
 
-    public NetworkObject Create(string name, int x, int y)
-    {
-        if (!IsServer) return null;
-
-        GameObject obj = Instantiate(piece, new Vector3(0, 0, -1), Quaternion.identity);
-        Chessman cm = obj.GetComponent<Chessman>();
-        cm.x.Value = x;
-        cm.y.Value = y;
+    public NetworkObject Create(string name, int x, int y) 
+    { 
+        if (!IsServer) return null; 
+        GameObject obj = Instantiate(piece, new Vector3(0, 0, -1), Quaternion.identity); 
+        Chessman cm = obj.GetComponent<Chessman>(); 
+        cm.x.Value = x; 
+        cm.y.Value = y; 
         cm.piecename.Value = name;
         obj.GetComponent<NetworkObject>().Spawn();
-        switch (cm.name)
-        {
-            case string s when s.StartsWith("bl_"):
-                cm.player.Value = "Black";
-                break;
-            case string s when s.StartsWith("wh_"):
+        switch (cm.name) { 
+            case string s when s.StartsWith("bl_"): 
+                cm.player.Value = "Black"; 
+                break; 
+            case string s when s.StartsWith("wh_"): 
                 cm.player.Value = "White";
-                break;
+                break; 
         }
         cm.hasMoved.Value = false;
-        return obj.GetComponent<NetworkObject>();
+        return obj.GetComponent<NetworkObject>(); 
     }
 
     public void SetPos(NetworkObject obj)

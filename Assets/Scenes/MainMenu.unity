@@ -286,6 +286,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf6fd8a7dd658524192eff9927d7596a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hoststarter: {fileID: 8174484912420166230, guid: 12adaa48c77d764449af4daa01ca2152, type: 3}
+  connector: {fileID: 3117877907527604700, guid: 2144bf6479cb56148968e314f85edbda, type: 3}
   host: {fileID: 1926871274}
   client: {fileID: 1571534635}
   passnplay: {fileID: 8318467660678886544}

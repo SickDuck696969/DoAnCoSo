@@ -13,6 +13,8 @@ using TMPro;
 
 public class Connecttoserver : MonoBehaviour
 {
+    public HostStarter hoststarter;
+    public ClientConnector connector;
     [SerializeField] private Button host;
     [SerializeField] private Button client;
     [SerializeField] private Button passnplay;
@@ -172,63 +174,15 @@ public class Connecttoserver : MonoBehaviour
     private void hostclick()
     {
         Debug.Log("hosting");
-        NetworkManager.Singleton.StartHost();
+        hoststarter.StartHost();
         ng.pColor = "White";
         NetworkManager.Singleton.SceneManager.LoadScene("VarianSelection", UnityEngine.SceneManagement.LoadSceneMode.Single);
-    }
-
-    IEnumerator GetDateFromServer()
-    {
-        UnityWebRequest www = UnityWebRequest.Get("http://localhost/testdating/getthedate.php");
-        yield return www.SendWebRequest();
-
-        if (www.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError("Failed to contact server: " + www.error);
-        }
-        else
-        {
-            string json = www.downloadHandler.text;
-            Debug.Log("Server time is: " + json);
-        }
     }
     private void clientclick()
     {
         Debug.Log("joining");
-        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-        NetworkManager.Singleton.StartClient();
-    }
-
-    private void OnClientConnected(ulong clientId)
-    {
-        if (clientId == NetworkManager.Singleton.LocalClientId)
-        {
-            Debug.Log("Client connected to host.");
-            ng.pColor = "Black";
-        }
-    }
-
-    private IEnumerator WaitForTosserSpawn()
-    {
-        float timeout = 5f;
-        float elapsed = 0f;
-
-        NetworkObject tosserNetworkObject = tosser.GetComponent<NetworkObject>();
-
-        while (!tosserNetworkObject.IsSpawned && elapsed < timeout)
-        {
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        if (tosserNetworkObject.IsSpawned)
-        {
-            tosser.GetComponent<blackorwhite>().PlayerAdd();
-        }
-        else
-        {
-            Debug.Log("? Tosser not spawned within timeout.");
-        }
+        ng.pColor = "Black";
+        connector.ConnectToHost();
     }
 
     public void Register(string username, string email, string password)

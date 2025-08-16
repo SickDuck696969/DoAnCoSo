@@ -1,11 +1,6 @@
-using JetBrains.Annotations;
 using System;
-using System.Threading;
+using System.Diagnostics;
 using Unity.Netcode;
-using Unity.VisualScripting;
-using UnityEditor;
-using UnityEditor.PackageManager;
-using UnityEngine;
 
 public class Ability
 {
@@ -16,17 +11,34 @@ public class Ability
     public Chessman owner;
     public virtual void end()
     {
-        owner.killbutt();
+        owner.killbuttClientRpc();
         owner.hasSpelled.Value = true;
         owner.controller.GetComponent<Game>().APloseServerRpc(owner.player.Value.ToString(), AP);
     }
+    [ServerRpc()]
     public virtual void action() { }
+    public virtual Ability Clone()
+    {
+        Ability ability = new Ability();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        return ability;
+    }
 }
 public class Passive : Ability
 {
     public Passive()
     {
         type = "passive";
+    }
+    public override Ability Clone()
+    {
+        Passive ability = new Passive();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        return ability;
     }
 }
 
@@ -40,6 +52,15 @@ public class PreMove : Ability
     {
         owner.controller.GetComponent<Game>().APloseServerRpc(owner.player.Value.ToString(), AP);
     }
+    public override Ability Clone()
+    {
+        PreMove ability = new PreMove();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        ability.AP = AP;
+        return ability;
+    }
 }
 
 public class PostMove : Ability
@@ -47,6 +68,15 @@ public class PostMove : Ability
     public PostMove()
     {
         type = "postmove";
+    }
+    public override Ability Clone()
+    {
+        PostMove ability = new PostMove();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        ability.AP = AP;
+        return ability;
     }
 }
 
@@ -56,6 +86,15 @@ public class Counter : Ability
     {
         type = "counter";
     }
+    public override Ability Clone()
+    {
+        Counter ability = new Counter();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        ability.AP = AP;
+        return ability;
+    }
 }
 
 public class OnCapture : Ability
@@ -63,6 +102,15 @@ public class OnCapture : Ability
     public OnCapture()
     {
         type = "oncapture";
+    }
+    public override Ability Clone()
+    {
+        OnCapture ability = new OnCapture();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        ability.AP = AP;
+        return ability;
     }
 }
 public class TyphoonEngine : Passive
@@ -75,22 +123,30 @@ public class TyphoonEngine : Passive
     }
     public override void action()
     {
-        if(!owner.hasMoved.Value && !owner.hasSpelled.Value && owner.player.Value.ToString() == owner.controller.GetComponent<Game>().currentPlayer.Value.ToString())
+        if (!owner.hasMoved.Value && !owner.hasSpelled.Value && owner.player.Value.ToString() == owner.controller.GetComponent<Game>().currentPlayer.Value.ToString())
         {
-            Debug.Log(owner.controller.GetComponent<Game>().currentColor.pColor);
             locked = false;
         }
-        if(!locked && owner.hasMoved.Value)
+        if (!locked && owner.hasMoved.Value)
         {
-            if(owner.player.Value == "Black")
+            if (owner.player.Value == "Black")
             {
                 owner.controller.GetComponent<Game>().APloseServerRpc("Black", -150);
-            } else if (owner.player.Value == "White")
+            }
+            else if (owner.player.Value == "White")
             {
                 owner.controller.GetComponent<Game>().APloseServerRpc("White", -150);
             }
             locked = true;
         }
+    }
+    public override Ability Clone()
+    {
+        TyphoonEngine ability = new TyphoonEngine();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        return ability;
     }
 }
 
@@ -104,13 +160,9 @@ public class Skid : PostMove
     }
     public override void action()
     {
-        Debug.Log("usinganacctikon");
         Game sc = owner.controller.GetComponent<Game>();
         int x = owner.xBoard.Value * owner.xmodifier.Value;
         int y = owner.yBoard.Value * owner.ymodifier.Value;
-        Debug.Log(x + " " + y);
-        Debug.Log(x+1);
-        Debug.Log((x-1) + " " + (y-2));
         try
         {
             if (x - 1 < sc.positions.Length && y - 2 < sc.positions.Length && sc.GetPos(x - 1, y - 2).name.EndsWith(owner.variant.suit))
@@ -135,9 +187,17 @@ public class Skid : PostMove
         }
         catch (IndexOutOfRangeException ex)
         {
-            Debug.Log("out o range");
+            Debug.WriteLine(ex.Message);
         }
-
+    }
+    public override Ability Clone()
+    {
+        Skid ability = new Skid();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        ability.AP = AP;
+        return ability;
     }
 }
 public class Pass : PostMove
@@ -152,6 +212,15 @@ public class Pass : PostMove
     {
         end();
     }
+    public override Ability Clone()
+    {
+        Pass ability = new Pass();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        ability.AP = AP;
+        return ability;
+    }
 }
 public class KnightKick : PreMove
 {
@@ -163,14 +232,35 @@ public class KnightKick : PreMove
     }
     public override void action()
     {
-        Debug.Log("lsad");
         Game sc = owner.controller.GetComponent<Game>();
         int x = owner.xBoard.Value;
         int y = owner.yBoard.Value;
         owner.hasMoved.Value = true;
-        owner.killbutt();
-        owner.EffectSpawnServerRpc(0, x, y);
+        owner.killbuttClientRpc();
+        for (int i = 1; i < 3; i++)
+        {
+            int mod = owner.player.Value == "White" ? 1 : -1;
+            int targetY = x + (i * mod);
+            var pos = sc.GetPos(x, targetY);
+            if (pos != null && pos.GetComponent<Chessman>().player.Value != owner.player.Value)
+            {
+                owner.MovePlateAttackSpawnServerRpc(x, targetY, 2);
+            }
+            else if (pos == null)
+            {
+                owner.MovePlateSpawnServerRpc(x, targetY, 2);
+            }
+        }
         end();
+    }
+    public override Ability Clone()
+    {
+        KnightKick ability = new KnightKick();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        ability.AP = AP;
+        return ability;
     }
 }
 public class ChoHenshin : PreMove
@@ -180,6 +270,15 @@ public class ChoHenshin : PreMove
         name = "Cho Henshin";
         AP = 1250;
         desc = "henshin";
+    }
+    public override Ability Clone()
+    {
+        ChoHenshin ability = new ChoHenshin();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        ability.AP = AP;
+        return ability;
     }
 }
 
@@ -193,8 +292,16 @@ public class Move : PreMove
     public override void action()
     {
         owner.hasMoved.Value = true;
-        Debug.Log(owner.variant);
-        owner.killbutt();
+        owner.killbuttClientRpc();
         owner.InitiateMovePlates();
+    }
+    public override Ability Clone()
+    {
+        Move ability = new Move();
+        ability.name = name;
+        ability.type = type;
+        ability.desc = desc;
+        ability.AP = AP;
+        return ability;
     }
 }

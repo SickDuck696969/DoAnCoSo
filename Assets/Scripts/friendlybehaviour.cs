@@ -23,17 +23,38 @@ public class fade
 }
 public class friendlybehaviour : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     public Player f;
     public List<fade> fades = new List<fade>();
     public GameObject button;
     public Friend data;
     public GameObject ipbox;
+    public HostStarter hoststarter;
     public ClientConnector connector;
     void Start()
     {
         ipbox = GameObject.Find("ipbox");
-        StartCoroutine(UpdateProblemListLoop());
+        if(data.confirmed == 1)
+        {
+            StartCoroutine(UpdateProblemListLoop());
+        }
+        else
+        {
+            if (f.data.user_id == data.user_id.ToString())
+            {
+                transform.Find("waittext").GetComponent<TMP_Text>().text = "wait for bro...";
+            }
+            else
+            {
+                this.transform.Find("name").GetComponent<TMP_Text>().text = data.username;
+                this.transform.Find("Id").GetComponent<TMP_Text>().text = data.friend_id.ToString();
+                GameObject buttonyes = Instantiate(button, this.transform.Find("Image"));
+                buttonyes.transform.GetComponentInChildren<TMP_Text>().text = "Confirm";
+                buttonyes.GetComponent<Button>().onClick.AddListener(() => conf(f.data.user_id, data.user_id.ToString()));
+                GameObject buttonno = Instantiate(button, this.transform.Find("Image"));
+                buttonno.transform.GetComponentInChildren<TMP_Text>().text = "Reject";
+                buttonno.GetComponent<Button>().onClick.AddListener(() => rej(f.data.user_id, data.user_id.ToString()));
+            }
+        }
     }
     IEnumerator UpdateProblemListLoop()
     {
@@ -51,9 +72,10 @@ public class friendlybehaviour : MonoBehaviour
                     transform.Find("waittext").GetComponent<TMP_Text>().text = "wait for bro...";
                 }else if(f.data.user_id == fade.friend_id.ToString())
                 {
+                    string scrapip = fade.ip;
                     transform.Find("message").GetComponent<TMP_Text>().text = "run the fade?(...)";
                     GameObject buttonyes = Instantiate(button, this.transform.Find("Image"));
-                    buttonyes.GetComponent<Button>().onClick.AddListener(() => runthefade(fade.user_id.ToString()));
+                    buttonyes.GetComponent<Button>().onClick.AddListener(() => runthefade(scrapip));
                     buttonyes.transform.GetComponentInChildren<TMP_Text>().text = "Bet";
                     GameObject buttonno = Instantiate(button, this.transform.Find("Image"));
                     buttonno.transform.GetComponentInChildren<TMP_Text>().text = "duck like a Bitch";
@@ -79,10 +101,8 @@ public class friendlybehaviour : MonoBehaviour
         }
         else
         {
-            // Parse JSON response into a list
             string json = www.downloadHandler.text;
 
-            // Wrap array if necessary for JsonUtility
             fade[] pulledFriends = JsonHelper.FromJson<fade>(json);
 
             fades.Clear();
@@ -97,6 +117,7 @@ public class friendlybehaviour : MonoBehaviour
 
     public void runthefade(string ip)
     {
+        Debug.Log(ip);
         connector.serverIP = ip;
         connector.ConnectToHost();
     }
@@ -134,36 +155,97 @@ public class friendlybehaviour : MonoBehaviour
     public void startsomething()
     {
         Destroy(GameObject.FindGameObjectWithTag("skillbutt"));
-        StartCoroutine(PostFade(int.Parse(f.data.user_id), data.user_id, ipbox.GetComponent<TMP_Text>().text, "suck it"));
-        Debug.Log("hosting");
+        if(f.data.user_id == data.user_id.ToString())
+        {
+            StartCoroutine(PostFade(int.Parse(f.data.user_id), data.friend_id, ipbox.GetComponent<TMP_Text>().text, "suck it"));
+        }
+        else
+        {
+            StartCoroutine(PostFade(int.Parse(f.data.user_id), data.user_id, ipbox.GetComponent<TMP_Text>().text, "suck it"));
+        }
         if (!NetworkManager.Singleton.IsHost)
-            NetworkManager.Singleton.StartHost();
+            hoststarter.StartHost();
     }
     // Update is called once per frame
     void Update()
     {
+        transform.Find("name").GetComponent<TMP_Text>().text = data.username;
+        transform.Find("Id").GetComponent<TMP_Text>().text = data.user_id.ToString();
     }
-}
 
-public class ClientConnector : MonoBehaviour
-{
-    public string serverIP = "192.168.1.15"; 
-    public ushort serverPort = 7777;         
-
-    public void ConnectToHost()
+    [System.Serializable]
+    public class ConfirmRequest
     {
-        var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        if (transport != null)
-        {
-            transport.ConnectionData.Address = serverIP;
-            transport.ConnectionData.Port = serverPort;
-        }
-        else
-        {
-            Debug.LogError("UnityTransport not found on NetworkManager.");
-            return;
-        }
+        public string user_id;
+        public string friend_id;
+    }
+    [System.Serializable]
+    public class DeleteRequest
+    {
+        public string user_id;
+        public string friend_id;
+    }
 
-        NetworkManager.Singleton.StartClient();
+    IEnumerator DeleteFriend(string userId, string friendId)
+    {
+        DeleteRequest requestData = new DeleteRequest
+        {
+            user_id = userId,
+            friend_id = friendId
+        };
+
+        string jsonData = JsonUtility.ToJson(requestData);
+        Debug.Log(jsonData); // Should now log {"user_id":"123","friend_id":"456"}
+
+        using (UnityWebRequest www = new UnityWebRequest("http://localhost/testdating/delete_friend.php", "POST"))
+        {
+            www.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(jsonData));
+            www.downloadHandler = new DownloadHandlerBuffer();
+            www.SetRequestHeader("Content-Type", "application/json");
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+                Debug.Log("Server: " + www.downloadHandler.text);
+            else
+                Debug.LogError("Error: " + www.error);
+        }
+    }
+
+
+    IEnumerator ConfirmFriend(string userId, string friendId)
+    {
+        ConfirmRequest requestData = new ConfirmRequest
+        {
+            user_id = friendId,
+            friend_id = userId
+        };
+
+        string jsonData = JsonUtility.ToJson(requestData);
+        using (UnityWebRequest www = UnityWebRequest.PostWwwForm("http://localhost/testdating/conf.php", jsonData))
+        {
+            www.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(jsonData));
+            www.downloadHandler = new DownloadHandlerBuffer();
+            www.SetRequestHeader("Content-Type", "application/json");
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+                Debug.Log(www.downloadHandler.text);
+            else
+                Debug.LogError(www.error);
+        }
+        Destroy(gameObject);
+    }
+    public void conf(string userId, string friendId)
+    {
+        StartCoroutine(ConfirmFriend(userId, friendId));
+    }
+
+    public void rej(string userId, string friendId)
+    {
+        Debug.Log(userId + friendId);
+        StartCoroutine(DeleteFriend(userId, friendId));
+        Destroy(gameObject);
     }
 }

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6779893942894029631}
   - component: {fileID: 3598629008031494539}
   m_Layer: 5
-  m_Name: name (1)
+  m_Name: Id
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -606,6 +606,19 @@ MonoBehaviour:
   f: {fileID: 11400000, guid: bccf6da95a9fbe44e87cc0289dd71219, type: 2}
   fades: []
   button: {fileID: 1430619713247160062, guid: d9c0a40514e6b0948819c890dab0bde0, type: 3}
+  data:
+    user_id: 0
+    username: 
+    email: 
+    fullname: 
+    bday: 
+    createwhen: 
+    history: 
+    confirmed: 0
+    rejected: 0
+  ipbox: {fileID: 0}
+  hoststarter: {fileID: 8174484912420166230, guid: 12adaa48c77d764449af4daa01ca2152, type: 3}
+  connector: {fileID: 3117877907527604700, guid: 2144bf6479cb56148968e314f85edbda, type: 3}
 --- !u!1 &9055150820329613800
 GameObject:
   m_ObjectHideFlags: 0

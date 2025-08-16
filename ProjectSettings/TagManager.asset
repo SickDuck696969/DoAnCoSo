@@ -15,6 +15,8 @@ TagManager:
   - BlackAP
   - White
   - Black
+  - chatbox
+  - friendpotential
   layers:
   - Default
   - TransparentFX
