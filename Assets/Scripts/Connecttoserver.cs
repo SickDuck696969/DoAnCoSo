@@ -171,8 +171,24 @@ public class Connecttoserver : MonoBehaviour
         Debug.Log("joining");
         TMP_InputField a = client.transform.parent.GetComponentInChildren<TMP_InputField>();
         connector.serverIP = a.text;
-        tosser.GetComponent<blackorwhite>().PlayerAdd();
+
+        // subscribe once before connecting
+        NetworkManager.Singleton.OnClientConnectedCallback += OnJoinedAsClient;
+
         connector.ConnectToHost();
+    }
+
+    private void OnJoinedAsClient(ulong clientId)
+    {
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            Debug.Log("Client successfully connected, running PlayerAdd...");
+
+            tosser.GetComponent<blackorwhite>()?.PlayerAdd();
+
+            // unsubscribe so it only fires once
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnJoinedAsClient;
+        }
     }
 
     public void Register(string username, string email, string password)
@@ -210,6 +226,10 @@ public class Connecttoserver : MonoBehaviour
                 Debug.LogError("Error: " + www.responseCode + " " + www.error);
             }
         }
+    }
+    private IEnumerator Delayedconnection()
+    {
+        yield return new WaitForSeconds(3f);
     }
 
     [System.Serializable]
