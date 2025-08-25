@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class adjustbox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class adjustbox : MonoBehaviour
 {
-    public float padding = 20f; // Optional extra space
+    public float padding = 20f;
     public float speed = 10f;
 
     private RectTransform rectTransform;
@@ -19,7 +19,6 @@ public class adjustbox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         targetWidth = rectTransform.sizeDelta.x;
         originalWidth = padding;
     }
-
     void Update()
     {
         targetWidth = CalculateChildrenWidth() + padding;
@@ -29,16 +28,6 @@ public class adjustbox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         rectTransform.sizeDelta = size;
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        padding = originalWidth + d;
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        padding = originalWidth;
-    }
-
     float CalculateChildrenWidth()
     {
         float totalWidth = 0f;
@@ -46,7 +35,6 @@ public class adjustbox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         foreach (RectTransform child in transform)
         {
 
-            // Use preferred width if LayoutElement is present, otherwise sizeDelta
             LayoutElement layout = child.GetComponent<LayoutElement>();
             if (layout != null && layout.preferredWidth > 0)
             {

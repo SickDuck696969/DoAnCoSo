@@ -1,8 +1,10 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.UI;
 
 
@@ -19,6 +21,7 @@ public class Game : NetworkBehaviour
     NetworkVariableWritePermission.Server);
     public NetworkVariable<FixedString64Bytes> currentColorid = new NetworkVariable<FixedString64Bytes>();
     public Player currentColor;
+    private AudioSource audioSource;
     private bool gameOver = false;
     public NetworkVariable<int> white_AP = new NetworkVariable<int>(
     5500, // initial value
@@ -32,6 +35,7 @@ public class Game : NetworkBehaviour
     );
     public TMP_Text whitedisplay;
     public TMP_Text blackdisplay;
+    public NetworkVariable<FixedString64Bytes> phase = new NetworkVariable<FixedString64Bytes>("premove");
 
     public override void OnNetworkSpawn()
     {
@@ -58,8 +62,14 @@ public class Game : NetworkBehaviour
         init();
     }
 
+    void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
+
     void init()
     {
+        phase.Value = "premove";
         currentPlayer.Value = "White";
         playerWhite = new NetworkObject[] {
             Create("wh_rook", 0, 0),
@@ -116,25 +126,34 @@ public class Game : NetworkBehaviour
     }
 
 
-    public NetworkObject Create(string name, int x, int y) 
-    { 
-        if (!IsServer) return null; 
-        GameObject obj = Instantiate(piece, new Vector3(0, 0, -1), Quaternion.identity); 
-        Chessman cm = obj.GetComponent<Chessman>(); 
-        cm.x.Value = x; 
-        cm.y.Value = y; 
+    public NetworkObject Create(string name, int x, int y)
+    {
+        if (!IsServer) return null;
+
+        Vector3 worldPos = new Vector3(x - 4.5f, y - 4.5f, -1);
+
+        GameObject obj = Instantiate(piece, worldPos, Quaternion.identity);
+
+        Chessman cm = obj.GetComponent<Chessman>();
+        cm.x.Value = x;
+        cm.y.Value = y;
         cm.piecename.Value = name;
-        obj.GetComponent<NetworkObject>().Spawn();
-        switch (cm.name) { 
-            case string s when s.StartsWith("bl_"): 
-                cm.player.Value = "Black"; 
-                break; 
-            case string s when s.StartsWith("wh_"): 
+
+        switch (name)
+        {
+            case string s when s.StartsWith("bl_"):
+                cm.player.Value = "Black";
+                break;
+            case string s when s.StartsWith("wh_"):
                 cm.player.Value = "White";
-                break; 
+                break;
         }
+
         cm.hasMoved.Value = false;
-        return obj.GetComponent<NetworkObject>(); 
+
+        obj.GetComponent<NetworkObject>().Spawn();
+
+        return obj.GetComponent<NetworkObject>();
     }
 
     public void SetPos(NetworkObject obj)
@@ -178,29 +197,53 @@ public class Game : NetworkBehaviour
     public void Update()
     {
         bg = GameObject.FindGameObjectWithTag("bg");
-        whitedisplay = GameObject.FindGameObjectWithTag("WhiteAP").GetComponent<TMP_Text>();
-        blackdisplay = GameObject.FindGameObjectWithTag("BlackAP").GetComponent<TMP_Text>();
+        whitedisplay = GameObject.FindGameObjectWithTag("WhiteAP").GetComponent<TMPro.TMP_Text>();
+        blackdisplay = GameObject.FindGameObjectWithTag("BlackAP").GetComponent<TMPro.TMP_Text>();
+
         if (currentPlayer.Value == "White")
         {
             whitedisplay.color = Color.white;
             blackdisplay.color = Color.white;
-            bg.GetComponent<Image>().sprite = Resources.Load<Sprite>("whtie_bg");
+            bg.GetComponent<UnityEngine.UI.Image>().sprite = Resources.Load<Sprite>("whtie_bg");
         }
         else
         {
             whitedisplay.color = Color.black;
             blackdisplay.color = Color.black;
-            bg.GetComponent<Image>().sprite = Resources.Load<Sprite>("black_bg");
+            bg.GetComponent<UnityEngine.UI.Image>().sprite = Resources.Load<Sprite>("black_bg");
         }
-        whitedisplay.text = white_AP.Value.ToString();
-        blackdisplay.text = black_AP.Value.ToString();
-        if (!IsOwner) return;
-        if (gameOver && Input.GetMouseButtonDown(0))
+
+        bool changed = false;
+
+        if (int.Parse(whitedisplay.text) != white_AP.Value)
         {
-            gameOver = false;
-            init();
+            int current = int.Parse(whitedisplay.text);
+            whitedisplay.text = (current + (white_AP.Value > current ? 5 : -5)).ToString();
+            changed = true;
+        }
+        else if (int.Parse(blackdisplay.text) != black_AP.Value)
+        {
+            int current = int.Parse(blackdisplay.text);
+            blackdisplay.text = (current + (black_AP.Value > current ? 5 : -5)).ToString();
+            changed = true;
+        }
+
+        // If we are still changing numbers, keep the sound playing
+        if (changed)
+        {
+            if (!audioSource.isPlaying) audioSource.Play();
+        }
+        else
+        {
+            if (audioSource.isPlaying) audioSource.Stop();
         }
     }
+
+    int Lerp(int a, int b, float t)
+    {
+        return (int)(a + (b - a) * t);
+    }
+
     [ServerRpc(RequireOwnership = false)]
     public void changebgServerRpc(string a)
     {
@@ -212,7 +255,6 @@ public class Game : NetworkBehaviour
         if (color == "White") white_AP.Value -= amount;
         else if (color == "Black") black_AP.Value -= amount;
     }
-    
     public void Winner(string playerWinner)
     {
         gameOver = true;

@@ -145,7 +145,7 @@ public class variantchooscontroller : MonoBehaviour
     }
     public void moveone()
     {
-        NetworkManager.Singleton.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        NetworkManager.Singleton.SceneManager.LoadScene("GameCard", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
     // Button click handler functions

@@ -1040,7 +1040,7 @@ GameObject:
   - component: {fileID: 513885449}
   - component: {fileID: 513885448}
   - component: {fileID: 513885447}
-  - component: {fileID: 513885446}
+  - component: {fileID: 513885450}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -1048,36 +1048,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &513885446
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 513885445}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf6fd8a7dd658524192eff9927d7596a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  host: {fileID: 0}
-  client: {fileID: 0}
-  passnplay: {fileID: 0}
-  AIplay: {fileID: 0}
-  tosser: {fileID: 0}
-  usernamein: {fileID: 0}
-  emailin: {fileID: 0}
-  passswordin: {fileID: 0}
-  Registerbt: {fileID: 0}
-  emaillogin: {fileID: 0}
-  passswordlogin: {fileID: 0}
-  loginbt: {fileID: 0}
-  Playhost: {fileID: 0}
-  Playclient: {fileID: 0}
-  togame: {fileID: 1193618781}
-  ng: {fileID: 11400000, guid: bccf6da95a9fbe44e87cc0289dd71219, type: 2}
-  hostready: 0
-  clientready: 0
 --- !u!114 &513885447
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1165,6 +1135,40 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &513885450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 513885445}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf6fd8a7dd658524192eff9927d7596a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoststarter: {fileID: 0}
+  connector: {fileID: 0}
+  host: {fileID: 0}
+  client: {fileID: 0}
+  passnplay: {fileID: 0}
+  AIplay: {fileID: 0}
+  tosser: {fileID: 0}
+  usernamein: {fileID: 0}
+  emailin: {fileID: 0}
+  passswordin: {fileID: 0}
+  Registerbt: {fileID: 0}
+  emaillogin: {fileID: 0}
+  passswordlogin: {fileID: 0}
+  loginbt: {fileID: 0}
+  Playhost: {fileID: 0}
+  Playclient: {fileID: 0}
+  togame: {fileID: 1193618781}
+  ng: {fileID: 11400000, guid: bccf6da95a9fbe44e87cc0289dd71219, type: 2}
+  blackready:
+    m_InternalValue: 0
+  whiteready:
+    m_InternalValue: 0
 --- !u!1001 &591358728
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4445,7 +4449,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cb58a504cd91c241903ac6967bfad54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
   l: {fileID: 11400000, guid: bccf6da95a9fbe44e87cc0289dd71219, type: 2}
   bg: {fileID: 192483196}
   asd: {fileID: 1193618781}

@@ -17,6 +17,11 @@ TagManager:
   - Black
   - chatbox
   - friendpotential
+  - ZaHando
+  - hoverlayer
+  - NameBox
+  - Piece
+  - infobox
   layers:
   - Default
   - TransparentFX

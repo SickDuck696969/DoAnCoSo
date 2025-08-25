@@ -193,6 +193,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   padding: 370
   speed: 10
+  expandedWidth: 300
+  d: 30
 --- !u!114 &7722257672059641121
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -235,7 +237,7 @@ GameObject:
   - component: {fileID: 7524623780692409159}
   m_Layer: 0
   m_Name: Piece
-  m_TagString: Untagged
+  m_TagString: Piece
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -398,6 +400,10 @@ MonoBehaviour:
   button: {fileID: 1706135699134058558, guid: 9d04eb4087cff174ebb06b736d20da67, type: 3}
   controller: {fileID: 0}
   plate: {fileID: 4011540696216096005, guid: 3d8259ca34f281c43822009d421ee773, type: 3}
+  effectplate: {fileID: 4011540696216096005, guid: 9c1ef81597a30e24c985bd3aa755ddc5, type: 3}
+  board: {fileID: 2249721522957468799, guid: 01243163ce0f3734aa05677f53e8d332, type: 3}
+  squareSize: 1
+  constant: {fileID: 0}
   player:
     m_InternalValue:
       utf8LengthInBytes: 0
@@ -548,7 +554,6 @@ MonoBehaviour:
     m_InternalValue: 0
   hasSpelled:
     m_InternalValue: 0
-  effectplate: {fileID: 4011540696216096005, guid: 84dfafd628c2d5e4b9b018dfc7294fa4, type: 3}
   xmodifier:
     m_InternalValue: 0
   ymodifier:

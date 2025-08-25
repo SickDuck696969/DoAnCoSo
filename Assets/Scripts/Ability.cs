@@ -1,6 +1,6 @@
 using System;
-using System.Diagnostics;
 using Unity.Netcode;
+using UnityEngine;
 
 public class Ability
 {
@@ -11,9 +11,7 @@ public class Ability
     public Chessman owner;
     public virtual void end()
     {
-        owner.killbuttClientRpc();
-        owner.hasSpelled.Value = true;
-        owner.controller.GetComponent<Game>().APloseServerRpc(owner.player.Value.ToString(), AP);
+        Debug.Log("spell end");
     }
     [ServerRpc()]
     public virtual void action() { }
@@ -47,10 +45,6 @@ public class PreMove : Ability
     public PreMove()
     {
         type = "premove";
-    }
-    public override void end()
-    {
-        owner.controller.GetComponent<Game>().APloseServerRpc(owner.player.Value.ToString(), AP);
     }
     public override Ability Clone()
     {
@@ -187,7 +181,7 @@ public class Skid : PostMove
         }
         catch (IndexOutOfRangeException ex)
         {
-            Debug.WriteLine(ex.Message);
+            UnityEngine.Debug.Log(ex.Message);
         }
     }
     public override Ability Clone()
@@ -235,22 +229,41 @@ public class KnightKick : PreMove
         Game sc = owner.controller.GetComponent<Game>();
         int x = owner.xBoard.Value;
         int y = owner.yBoard.Value;
-        owner.hasMoved.Value = true;
-        owner.killbuttClientRpc();
+
+        Debug.Log($"[ACTION START] Piece: {owner.name}, Player: {owner.player.Value}, Position: ({x}, {y})");
+
         for (int i = 1; i < 3; i++)
         {
             int mod = owner.player.Value == "White" ? 1 : -1;
-            int targetY = x + (i * mod);
+            int targetY = y + (i * mod);
+
+            Debug.Log($"[STEP] i={i}, mod={mod}, Checking target position ({x}, {targetY})");
+
             var pos = sc.GetPos(x, targetY);
-            if (pos != null && pos.GetComponent<Chessman>().player.Value != owner.player.Value)
+
+            if (pos != null)
             {
-                owner.MovePlateAttackSpawnServerRpc(x, targetY, 2);
+                Chessman cm = pos.GetComponent<Chessman>();
+                Debug.Log($"[FOUND PIECE] At ({x}, {targetY}) => Player={cm.player.Value}");
+
+                if (cm.player.Value != owner.player.Value)
+                {
+                    Debug.Log($"[ATTACK] Spawning attack plate at ({x}, {targetY})");
+                    owner.MovePlateAttackSpawnServerRpc(x, targetY, 2);
+                }
+                else
+                {
+                    Debug.Log($"[BLOCKED] Same player piece at ({x}, {targetY})");
+                }
             }
-            else if (pos == null)
+            else
             {
+                Debug.Log($"[MOVE] Empty tile, spawning move plate at ({x}, {targetY})");
                 owner.MovePlateSpawnServerRpc(x, targetY, 2);
             }
         }
+
+        Debug.Log("[ACTION END]");
         end();
     }
     public override Ability Clone()

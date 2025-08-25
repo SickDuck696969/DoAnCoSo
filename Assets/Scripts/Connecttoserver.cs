@@ -32,8 +32,10 @@ public class Connecttoserver : MonoBehaviour
     [SerializeField] private Button Playclient;
     [SerializeField] private Button togame;
     public Player ng;
-    public bool hostready = false;
-    public bool clientready = false;
+    public NetworkVariable<bool> blackready =
+        new NetworkVariable<bool>();
+    public NetworkVariable<bool> whiteready =
+        new NetworkVariable<bool>();
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -75,8 +77,11 @@ public class Connecttoserver : MonoBehaviour
         }
         if (togame != null)
         {
-            togame.onClick.AddListener(togamea);
+            togame.onClick.AddListener(togameaServerRpc);
         }
+
+        blackready.Value = false;
+        whiteready.Value = false;
 
     }
 
@@ -132,26 +137,9 @@ public class Connecttoserver : MonoBehaviour
         SceneManager.LoadScene("GameAI");
     }
 
-    private void togamea()
+    [ServerRpc(RequireOwnership = false)]
+    private void togameaServerRpc()
     {
-        if(ng.status == "host")
-        {
-            hostready = true;
-        }
-        else
-        {
-            {
-                clientready = true;
-            }
-        }
-    }
-
-    private void Update()
-    {
-        if (hostready && clientready)
-        {
-            NetworkManager.Singleton.SceneManager.LoadScene("Game", UnityEngine.SceneManagement.LoadSceneMode.Single);
-        }
     }
 
     private void login()
@@ -175,13 +163,15 @@ public class Connecttoserver : MonoBehaviour
     {
         Debug.Log("hosting");
         hoststarter.StartHost();
-        ng.pColor = "White";
+        tosser.GetComponent<blackorwhite>().PlayerAdd();
         NetworkManager.Singleton.SceneManager.LoadScene("VarianSelection", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
     private void clientclick()
     {
         Debug.Log("joining");
-        ng.pColor = "Black";
+        TMP_InputField a = client.transform.parent.GetComponentInChildren<TMP_InputField>();
+        connector.serverIP = a.text;
+        tosser.GetComponent<blackorwhite>().PlayerAdd();
         connector.ConnectToHost();
     }
 

@@ -25,8 +25,14 @@ public class MainMenu : MonoBehaviour
 
     void Start()
     {
-        ipbox = GameObject.Find("Canvas/ipbox").GetComponent<TMP_Text>();
-        namebox = GameObject.FindGameObjectWithTag("WhiteAP").GetComponent<TMP_Text>();
+        if (GameObject.FindGameObjectWithTag("hoverlayer") != null)
+        {
+            ipbox = GameObject.FindGameObjectWithTag("hoverlayer").GetComponent<TMP_Text>();
+        }
+        if (GameObject.FindGameObjectWithTag("NameBox"))
+        {
+            namebox = GameObject.FindGameObjectWithTag("NameBox").GetComponent<TMP_Text>();
+        }
         if (AudioManager.Instance != null)
         {
             volumeSlider.value = AudioManager.Instance.GetBGMVolume();

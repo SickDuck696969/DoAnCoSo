@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using TMPro;
 using Unity.Collections;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,7 +12,11 @@ public class Chessman : NetworkBehaviour
     public GameObject button;
     public GameObject controller;
     public GameObject plate;
+    public GameObject effectplate;
+    public Transform board;
+    public float squareSize = 1.0f;
     public Piece template;
+    public NetworkObject constant;
     public NetworkVariable<FixedString64Bytes> player =
     new NetworkVariable<FixedString64Bytes>();
     public NetworkVariable<FixedString64Bytes> piecename =
@@ -28,6 +34,7 @@ public class Chessman : NetworkBehaviour
     public Piece variant;
     public NetworkVariable<int> xmodifier = new NetworkVariable<int>();
     public NetworkVariable<int> ymodifier = new NetworkVariable<int>();
+    public List<Ability> queue = new List<Ability>();
     public Sprite bl_queen,
         bl_rook,
         bl_bishop,
@@ -48,12 +55,12 @@ public class Chessman : NetworkBehaviour
         SetYBoardServerRpc(y.Value);
         this.name = piecename.Value.ToString();
         Activate();
+        constant = this.GetComponent<NetworkObject>();
     }
 
 
     public void Activate()
     {
-        SetCoords();
 
         switch (this.name)
         {
@@ -70,7 +77,6 @@ public class Chessman : NetworkBehaviour
                 }
                 break;
             case string s when s.StartsWith("wh_"):
-                this.player.Value = "White";
                 foreach (Piece sa in controller.GetComponent<Game>().draft.whitearmy)
                 {
                     if (this.name.EndsWith(sa.suit))
@@ -87,13 +93,19 @@ public class Chessman : NetworkBehaviour
 
     public void SetCoords()
     {
-        float x = xBoard.Value;
-        float y = yBoard.Value;
-        x *= 1.0f;
-        y *= 1.0f;
-        x += -3.5f;
-        y += -3.5f;
-        this.transform.position = new Vector3(x, y, -1.0f);
+        ReSetCoordsClientRpc();
+    }
+
+    [ClientRpc(RequireOwnership = false)]
+    public void ReSetCoordsClientRpc()
+    {
+        float x = (xBoard.Value - 3.5f) * squareSize;
+        float y = (yBoard.Value - 3.5f) * squareSize;
+        this.transform.position = new Vector3(
+            board.position.x + x,
+            board.position.y + y,
+            -1.0f
+        );
     }
     public int GetXBoard() { return xBoard.Value; }
     public int GetYBoard() { return yBoard.Value; }
@@ -109,9 +121,32 @@ public class Chessman : NetworkBehaviour
         if (!controller.GetComponent<Game>().IsGameOver() && controller.GetComponent<Game>().currentPlayer.Value.ToString() == player.Value && controller.GetComponent<Game>().currentPlayer.Value == controller.GetComponent<Game>().currentColor.pColor)
         {
             DestroyMovePlatesServerRpc();
-            killbuttClientRpc();
-            SetButton();
+            if (queue.Count > 0)
+            {
+                foreach (var item in queue) {
+                    resolve(item.name);
+                }
+                queue.Clear();
+                if (hasMoved.Value == true)
+                {
+                    sethasspelledServerRpc(true);
+                }
+            }
+            else
+            {
+                sethasspelledServerRpc(true);
+            }
+            if (hasMoved.Value == false)
+            {
+                InitiateMovePlates();
+            }
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void sethasspelledServerRpc(bool v)
+    {
+        hasSpelled.Value = v;
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -120,7 +155,10 @@ public class Chessman : NetworkBehaviour
         GameObject[] plates = GameObject.FindGameObjectsWithTag("MovePlate");
         foreach (GameObject plate in plates)
         {
-            plate.GetComponent<NetworkObject>().Despawn();
+            if (plate.GetComponent<NetworkObject>().IsSpawned)
+            {
+                plate.GetComponent<NetworkObject>().Despawn();
+            }
         }
     }
     [ClientRpc(RequireOwnership = false)]
@@ -385,13 +423,7 @@ public class Chessman : NetworkBehaviour
             case 0:
                 mpScript = mp.GetComponent<MovePlate>();
                 break;
-
-            case 1:
-                mpScript = mp.GetComponent<explosionplate>();
-                break;
-
             case 2:
-                mpScript = mp.GetComponent<MovePlate>();
                 mpScript.esploding.Value = true;
                 break;
         }
@@ -400,6 +432,29 @@ public class Chessman : NetworkBehaviour
         mpScript.SetCoords(matrixX, matrixY);
         mp.GetComponent<NetworkObject>().Spawn();
         mpScript.SetColorClientRpc(new Color(1f, 0f, 0f, 1f));
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void DmgslashmarkerServerRpc(int matrixX, int matrixY)
+    {
+        float x = matrixX;
+        float y = matrixY;
+        x *= 1.0f;
+        y *= 1.0f;
+        x += -3.5f;
+        y += -3.5f;
+        GameObject mp = Instantiate(effectplate, new Vector3(x, y, -2.0f), Quaternion.identity);
+        MovePlate mpScript = mp.GetComponent<explosionplate>();
+        mpScript.SetReference(gameObject.GetComponent<NetworkObject>());
+        mpScript.SetCoords(matrixX, matrixY);
+        mp.GetComponent<NetworkObject>().Spawn();
+        if (player.Value == "Black")
+        {
+            mpScript.SetColorClientRpc(new Color(255f, 0f, 88f, 1f));
+        }
+        else if (player.Value == "White")
+        {
+            mpScript.SetColorClientRpc(new Color(0f, 176f, 255f, 1f));
+        }
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -495,9 +550,18 @@ public class Chessman : NetworkBehaviour
         controller.GetComponent<Game>().currentPlayer.Value = (controller.GetComponent<Game>().currentPlayer.Value.ToString() == "White") ? "Black" : "White";
         hasMoved.Value = false;
         hasSpelled.Value = false;
+        controller.GetComponent<Game>().phase.Value = "premove";
     }
     void Update()
     {
+        if (hasMoved.Value)
+        {
+            controller.GetComponent<Game>().phase.Value = "postmove";
+        }
+        SetCoords();
+        if (hasMoved.Value) { 
+
+        }
         ActionsServerRpc();
         if (hasMoved.Value && hasSpelled.Value)
         {

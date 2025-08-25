@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6465586727290408200}
   - component: {fileID: -3900430726431947812}
   - component: {fileID: 6249317214212030708}
-  - component: {fileID: 8136673048441658381}
+  - component: {fileID: 5084152649633416872}
   m_Layer: 0
   m_Name: MovePlate
   m_TagString: MovePlate
@@ -161,7 +161,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.2, y: 0.2}
   m_EdgeRadius: 0
---- !u!114 &8136673048441658381
+--- !u!114 &5084152649633416872
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
